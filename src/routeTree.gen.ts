@@ -21,6 +21,7 @@ import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedWikiSpaceSlugRouteImport } from './routes/_authenticated/wiki.$spaceSlug'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients/new'
 import { Route as AuthenticatedClientsClientIdRouteImport } from './routes/_authenticated/clients/$clientId'
+import { Route as AuthenticatedWikiSpaceSlugPageSlugRouteImport } from './routes/_authenticated/wiki.$spaceSlug.$pageSlug'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -84,6 +85,12 @@ const AuthenticatedClientsClientIdRoute =
     path: '/clients/$clientId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedWikiSpaceSlugPageSlugRoute =
+  AuthenticatedWikiSpaceSlugPageSlugRouteImport.update({
+    id: '/$pageSlug',
+    path: '/$pageSlug',
+    getParentRoute: () => AuthenticatedWikiSpaceSlugRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -94,9 +101,10 @@ export interface FileRoutesByFullPath {
   '/wiki': typeof AuthenticatedWikiRouteWithChildren
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
-  '/wiki/$spaceSlug': typeof AuthenticatedWikiSpaceSlugRoute
+  '/wiki/$spaceSlug': typeof AuthenticatedWikiSpaceSlugRouteWithChildren
   '/clients/': typeof AuthenticatedClientsIndexRoute
   '/wiki/': typeof AuthenticatedWikiIndexRoute
+  '/wiki/$spaceSlug/$pageSlug': typeof AuthenticatedWikiSpaceSlugPageSlugRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -106,9 +114,10 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
-  '/wiki/$spaceSlug': typeof AuthenticatedWikiSpaceSlugRoute
+  '/wiki/$spaceSlug': typeof AuthenticatedWikiSpaceSlugRouteWithChildren
   '/clients': typeof AuthenticatedClientsIndexRoute
   '/wiki': typeof AuthenticatedWikiIndexRoute
+  '/wiki/$spaceSlug/$pageSlug': typeof AuthenticatedWikiSpaceSlugPageSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -121,9 +130,10 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/_authenticated/clients/new': typeof AuthenticatedClientsNewRoute
-  '/_authenticated/wiki/$spaceSlug': typeof AuthenticatedWikiSpaceSlugRoute
+  '/_authenticated/wiki/$spaceSlug': typeof AuthenticatedWikiSpaceSlugRouteWithChildren
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
   '/_authenticated/wiki/': typeof AuthenticatedWikiIndexRoute
+  '/_authenticated/wiki/$spaceSlug/$pageSlug': typeof AuthenticatedWikiSpaceSlugPageSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/wiki/$spaceSlug'
     | '/clients/'
     | '/wiki/'
+    | '/wiki/$spaceSlug/$pageSlug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/wiki/$spaceSlug'
     | '/clients'
     | '/wiki'
+    | '/wiki/$spaceSlug/$pageSlug'
   id:
     | '__root__'
     | '/_authenticated'
@@ -165,6 +177,7 @@ export interface FileRouteTypes {
     | '/_authenticated/wiki/$spaceSlug'
     | '/_authenticated/clients/'
     | '/_authenticated/wiki/'
+    | '/_authenticated/wiki/$spaceSlug/$pageSlug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -258,16 +271,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsClientIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/wiki/$spaceSlug/$pageSlug': {
+      id: '/_authenticated/wiki/$spaceSlug/$pageSlug'
+      path: '/$pageSlug'
+      fullPath: '/wiki/$spaceSlug/$pageSlug'
+      preLoaderRoute: typeof AuthenticatedWikiSpaceSlugPageSlugRouteImport
+      parentRoute: typeof AuthenticatedWikiSpaceSlugRoute
+    }
   }
 }
 
+interface AuthenticatedWikiSpaceSlugRouteChildren {
+  AuthenticatedWikiSpaceSlugPageSlugRoute: typeof AuthenticatedWikiSpaceSlugPageSlugRoute
+}
+
+const AuthenticatedWikiSpaceSlugRouteChildren: AuthenticatedWikiSpaceSlugRouteChildren =
+  {
+    AuthenticatedWikiSpaceSlugPageSlugRoute:
+      AuthenticatedWikiSpaceSlugPageSlugRoute,
+  }
+
+const AuthenticatedWikiSpaceSlugRouteWithChildren =
+  AuthenticatedWikiSpaceSlugRoute._addFileChildren(
+    AuthenticatedWikiSpaceSlugRouteChildren,
+  )
+
 interface AuthenticatedWikiRouteChildren {
-  AuthenticatedWikiSpaceSlugRoute: typeof AuthenticatedWikiSpaceSlugRoute
+  AuthenticatedWikiSpaceSlugRoute: typeof AuthenticatedWikiSpaceSlugRouteWithChildren
   AuthenticatedWikiIndexRoute: typeof AuthenticatedWikiIndexRoute
 }
 
 const AuthenticatedWikiRouteChildren: AuthenticatedWikiRouteChildren = {
-  AuthenticatedWikiSpaceSlugRoute: AuthenticatedWikiSpaceSlugRoute,
+  AuthenticatedWikiSpaceSlugRoute: AuthenticatedWikiSpaceSlugRouteWithChildren,
   AuthenticatedWikiIndexRoute: AuthenticatedWikiIndexRoute,
 }
 
