@@ -18,6 +18,7 @@ import {
   Briefcase, User as UserIcon, FileText, StickyNote, Mail, Phone, Pencil, Save, X,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
+import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 
 export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   component: ClientDetail,
@@ -156,6 +157,9 @@ function OverviewPane({ client }: { client: { id: string; notes: string | null; 
         ) : (
           <p className="text-sm text-muted-foreground italic">No notes yet.</p>
         )}
+        <div className="mt-8">
+          <LinkedWikiPages entityType="client" entityId={client.id} />
+        </div>
       </div>
       <aside className="space-y-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
         <div>

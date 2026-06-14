@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Copy, Pencil, Save, Trash2, X, Sparkles, Check } from "lucide-react";
 import { extractVariables, fillTemplate } from "@/lib/prompt-template";
 import { formatDistanceToNow } from "date-fns";
+import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 
 export const Route = createFileRoute("/_authenticated/$id")({
   component: PromptDetail,
@@ -281,6 +282,10 @@ function PromptDetail() {
           </aside>
         </div>
       )}
+
+      <div className="mt-10">
+        <LinkedWikiPages entityType="prompt" entityId={prompt.id} />
+      </div>
     </div>
   );
 }

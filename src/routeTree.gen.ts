@@ -12,12 +12,17 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedWikiRouteImport } from './routes/_authenticated/wiki'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedNewRouteImport } from './routes/_authenticated/new'
 import { Route as AuthenticatedIdRouteImport } from './routes/_authenticated/$id'
+import { Route as AuthenticatedWikiIndexRouteImport } from './routes/_authenticated/wiki.index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients/index'
+import { Route as AuthenticatedWikiSpaceSlugRouteImport } from './routes/_authenticated/wiki.$spaceSlug'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients/new'
 import { Route as AuthenticatedClientsClientIdRouteImport } from './routes/_authenticated/clients/$clientId'
+import { Route as AuthenticatedWikiSpaceSlugPageSlugRouteImport } from './routes/_authenticated/wiki.$spaceSlug.$pageSlug'
+import { Route as AuthenticatedWikiSpaceSlugPageSlugEditRouteImport } from './routes/_authenticated/wiki.$spaceSlug.$pageSlug.edit'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -31,6 +36,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedWikiRoute = AuthenticatedWikiRouteImport.update({
+  id: '/wiki',
+  path: '/wiki',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
@@ -48,11 +58,22 @@ const AuthenticatedIdRoute = AuthenticatedIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedWikiIndexRoute = AuthenticatedWikiIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedWikiRoute,
+} as any)
 const AuthenticatedClientsIndexRoute =
   AuthenticatedClientsIndexRouteImport.update({
     id: '/clients/',
     path: '/clients/',
     getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedWikiSpaceSlugRoute =
+  AuthenticatedWikiSpaceSlugRouteImport.update({
+    id: '/$spaceSlug',
+    path: '/$spaceSlug',
+    getParentRoute: () => AuthenticatedWikiRoute,
   } as any)
 const AuthenticatedClientsNewRoute = AuthenticatedClientsNewRouteImport.update({
   id: '/clients/new',
@@ -65,6 +86,18 @@ const AuthenticatedClientsClientIdRoute =
     path: '/clients/$clientId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedWikiSpaceSlugPageSlugRoute =
+  AuthenticatedWikiSpaceSlugPageSlugRouteImport.update({
+    id: '/$pageSlug',
+    path: '/$pageSlug',
+    getParentRoute: () => AuthenticatedWikiSpaceSlugRoute,
+  } as any)
+const AuthenticatedWikiSpaceSlugPageSlugEditRoute =
+  AuthenticatedWikiSpaceSlugPageSlugEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthenticatedWikiSpaceSlugPageSlugRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -72,9 +105,14 @@ export interface FileRoutesByFullPath {
   '/$id': typeof AuthenticatedIdRoute
   '/new': typeof AuthenticatedNewRoute
   '/team': typeof AuthenticatedTeamRoute
+  '/wiki': typeof AuthenticatedWikiRouteWithChildren
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/wiki/$spaceSlug': typeof AuthenticatedWikiSpaceSlugRouteWithChildren
   '/clients/': typeof AuthenticatedClientsIndexRoute
+  '/wiki/': typeof AuthenticatedWikiIndexRoute
+  '/wiki/$spaceSlug/$pageSlug': typeof AuthenticatedWikiSpaceSlugPageSlugRouteWithChildren
+  '/wiki/$spaceSlug/$pageSlug/edit': typeof AuthenticatedWikiSpaceSlugPageSlugEditRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -84,7 +122,11 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/wiki/$spaceSlug': typeof AuthenticatedWikiSpaceSlugRouteWithChildren
   '/clients': typeof AuthenticatedClientsIndexRoute
+  '/wiki': typeof AuthenticatedWikiIndexRoute
+  '/wiki/$spaceSlug/$pageSlug': typeof AuthenticatedWikiSpaceSlugPageSlugRouteWithChildren
+  '/wiki/$spaceSlug/$pageSlug/edit': typeof AuthenticatedWikiSpaceSlugPageSlugEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -93,10 +135,15 @@ export interface FileRoutesById {
   '/_authenticated/$id': typeof AuthenticatedIdRoute
   '/_authenticated/new': typeof AuthenticatedNewRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
+  '/_authenticated/wiki': typeof AuthenticatedWikiRouteWithChildren
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/_authenticated/clients/new': typeof AuthenticatedClientsNewRoute
+  '/_authenticated/wiki/$spaceSlug': typeof AuthenticatedWikiSpaceSlugRouteWithChildren
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
+  '/_authenticated/wiki/': typeof AuthenticatedWikiIndexRoute
+  '/_authenticated/wiki/$spaceSlug/$pageSlug': typeof AuthenticatedWikiSpaceSlugPageSlugRouteWithChildren
+  '/_authenticated/wiki/$spaceSlug/$pageSlug/edit': typeof AuthenticatedWikiSpaceSlugPageSlugEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -106,9 +153,14 @@ export interface FileRouteTypes {
     | '/$id'
     | '/new'
     | '/team'
+    | '/wiki'
     | '/clients/$clientId'
     | '/clients/new'
+    | '/wiki/$spaceSlug'
     | '/clients/'
+    | '/wiki/'
+    | '/wiki/$spaceSlug/$pageSlug'
+    | '/wiki/$spaceSlug/$pageSlug/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -118,7 +170,11 @@ export interface FileRouteTypes {
     | '/'
     | '/clients/$clientId'
     | '/clients/new'
+    | '/wiki/$spaceSlug'
     | '/clients'
+    | '/wiki'
+    | '/wiki/$spaceSlug/$pageSlug'
+    | '/wiki/$spaceSlug/$pageSlug/edit'
   id:
     | '__root__'
     | '/_authenticated'
@@ -126,10 +182,15 @@ export interface FileRouteTypes {
     | '/_authenticated/$id'
     | '/_authenticated/new'
     | '/_authenticated/team'
+    | '/_authenticated/wiki'
     | '/_authenticated/'
     | '/_authenticated/clients/$clientId'
     | '/_authenticated/clients/new'
+    | '/_authenticated/wiki/$spaceSlug'
     | '/_authenticated/clients/'
+    | '/_authenticated/wiki/'
+    | '/_authenticated/wiki/$spaceSlug/$pageSlug'
+    | '/_authenticated/wiki/$spaceSlug/$pageSlug/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -160,6 +221,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/wiki': {
+      id: '/_authenticated/wiki'
+      path: '/wiki'
+      fullPath: '/wiki'
+      preLoaderRoute: typeof AuthenticatedWikiRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/team': {
       id: '/_authenticated/team'
       path: '/team'
@@ -181,12 +249,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/wiki/': {
+      id: '/_authenticated/wiki/'
+      path: '/'
+      fullPath: '/wiki/'
+      preLoaderRoute: typeof AuthenticatedWikiIndexRouteImport
+      parentRoute: typeof AuthenticatedWikiRoute
+    }
     '/_authenticated/clients/': {
       id: '/_authenticated/clients/'
       path: '/clients'
       fullPath: '/clients/'
       preLoaderRoute: typeof AuthenticatedClientsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/wiki/$spaceSlug': {
+      id: '/_authenticated/wiki/$spaceSlug'
+      path: '/$spaceSlug'
+      fullPath: '/wiki/$spaceSlug'
+      preLoaderRoute: typeof AuthenticatedWikiSpaceSlugRouteImport
+      parentRoute: typeof AuthenticatedWikiRoute
     }
     '/_authenticated/clients/new': {
       id: '/_authenticated/clients/new'
@@ -202,13 +284,71 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsClientIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/wiki/$spaceSlug/$pageSlug': {
+      id: '/_authenticated/wiki/$spaceSlug/$pageSlug'
+      path: '/$pageSlug'
+      fullPath: '/wiki/$spaceSlug/$pageSlug'
+      preLoaderRoute: typeof AuthenticatedWikiSpaceSlugPageSlugRouteImport
+      parentRoute: typeof AuthenticatedWikiSpaceSlugRoute
+    }
+    '/_authenticated/wiki/$spaceSlug/$pageSlug/edit': {
+      id: '/_authenticated/wiki/$spaceSlug/$pageSlug/edit'
+      path: '/edit'
+      fullPath: '/wiki/$spaceSlug/$pageSlug/edit'
+      preLoaderRoute: typeof AuthenticatedWikiSpaceSlugPageSlugEditRouteImport
+      parentRoute: typeof AuthenticatedWikiSpaceSlugPageSlugRoute
+    }
   }
 }
+
+interface AuthenticatedWikiSpaceSlugPageSlugRouteChildren {
+  AuthenticatedWikiSpaceSlugPageSlugEditRoute: typeof AuthenticatedWikiSpaceSlugPageSlugEditRoute
+}
+
+const AuthenticatedWikiSpaceSlugPageSlugRouteChildren: AuthenticatedWikiSpaceSlugPageSlugRouteChildren =
+  {
+    AuthenticatedWikiSpaceSlugPageSlugEditRoute:
+      AuthenticatedWikiSpaceSlugPageSlugEditRoute,
+  }
+
+const AuthenticatedWikiSpaceSlugPageSlugRouteWithChildren =
+  AuthenticatedWikiSpaceSlugPageSlugRoute._addFileChildren(
+    AuthenticatedWikiSpaceSlugPageSlugRouteChildren,
+  )
+
+interface AuthenticatedWikiSpaceSlugRouteChildren {
+  AuthenticatedWikiSpaceSlugPageSlugRoute: typeof AuthenticatedWikiSpaceSlugPageSlugRouteWithChildren
+}
+
+const AuthenticatedWikiSpaceSlugRouteChildren: AuthenticatedWikiSpaceSlugRouteChildren =
+  {
+    AuthenticatedWikiSpaceSlugPageSlugRoute:
+      AuthenticatedWikiSpaceSlugPageSlugRouteWithChildren,
+  }
+
+const AuthenticatedWikiSpaceSlugRouteWithChildren =
+  AuthenticatedWikiSpaceSlugRoute._addFileChildren(
+    AuthenticatedWikiSpaceSlugRouteChildren,
+  )
+
+interface AuthenticatedWikiRouteChildren {
+  AuthenticatedWikiSpaceSlugRoute: typeof AuthenticatedWikiSpaceSlugRouteWithChildren
+  AuthenticatedWikiIndexRoute: typeof AuthenticatedWikiIndexRoute
+}
+
+const AuthenticatedWikiRouteChildren: AuthenticatedWikiRouteChildren = {
+  AuthenticatedWikiSpaceSlugRoute: AuthenticatedWikiSpaceSlugRouteWithChildren,
+  AuthenticatedWikiIndexRoute: AuthenticatedWikiIndexRoute,
+}
+
+const AuthenticatedWikiRouteWithChildren =
+  AuthenticatedWikiRoute._addFileChildren(AuthenticatedWikiRouteChildren)
 
 interface AuthenticatedRouteChildren {
   AuthenticatedIdRoute: typeof AuthenticatedIdRoute
   AuthenticatedNewRoute: typeof AuthenticatedNewRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
+  AuthenticatedWikiRoute: typeof AuthenticatedWikiRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedClientsClientIdRoute: typeof AuthenticatedClientsClientIdRoute
   AuthenticatedClientsNewRoute: typeof AuthenticatedClientsNewRoute
@@ -219,6 +359,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIdRoute: AuthenticatedIdRoute,
   AuthenticatedNewRoute: AuthenticatedNewRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
+  AuthenticatedWikiRoute: AuthenticatedWikiRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedClientsClientIdRoute: AuthenticatedClientsClientIdRoute,
   AuthenticatedClientsNewRoute: AuthenticatedClientsNewRoute,

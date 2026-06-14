@@ -1,0 +1,135 @@
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { Pencil, Trash2, Clock } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { formatDistanceToNow } from "date-fns";
+import { LinkedEntities } from "@/components/wiki/LinkedEntities";
+
+export const Route = createFileRoute("/_authenticated/wiki/$spaceSlug/$pageSlug")({
+  component: PageView,
+});
+
+function PageView() {
+  const { spaceSlug, pageSlug } = Route.useParams();
+  const router = useRouter();
+  const qc = useQueryClient();
+  const { user, isAdmin } = useAuth();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["wiki-page", spaceSlug, pageSlug],
+    queryFn: async () => {
+      const { data: space, error: e1 } = await supabase
+        .from("wiki_spaces")
+        .select("id")
+        .eq("slug", spaceSlug)
+        .maybeSingle();
+      if (e1) throw e1;
+      if (!space) return null;
+      const { data: page, error: e2 } = await supabase
+        .from("wiki_pages")
+        .select("*")
+        .eq("space_id", space.id)
+        .eq("slug", pageSlug)
+        .maybeSingle();
+      if (e2) throw e2;
+      return page;
+    },
+  });
+
+  if (isLoading) {
+    return <div className="text-sm text-muted-foreground">Loading…</div>;
+  }
+  if (!data) {
+    return <div className="text-sm text-muted-foreground">Page not found.</div>;
+  }
+
+  const canEdit = isAdmin || data.created_by === user?.id;
+
+  const del = async () => {
+    const { error } = await supabase.from("wiki_pages").delete().eq("id", data.id);
+    if (error) return toast.error(error.message);
+    toast.success("Deleted");
+    qc.invalidateQueries({ queryKey: ["wiki-space-pages"] });
+    qc.invalidateQueries({ queryKey: ["wiki-recent"] });
+    router.navigate({ to: "/wiki/$spaceSlug", params: { spaceSlug } });
+  };
+
+  return (
+    <article className="py-2">
+      <div className="flex items-start justify-between gap-4 pb-6 border-b border-border">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            {data.status === "draft" && (
+              <span className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground">draft</span>
+            )}
+            <Clock className="h-3 w-3" />
+            updated {formatDistanceToNow(new Date(data.updated_at), { addSuffix: true })}
+          </div>
+          <h1 className="mt-2 font-display text-3xl md:text-4xl font-semibold leading-tight break-words">
+            {data.title}
+          </h1>
+        </div>
+        {canEdit && (
+          <div className="flex gap-2 shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => router.navigate({
+                to: "/wiki/$spaceSlug/$pageSlug/edit",
+                params: { spaceSlug, pageSlug },
+              })}
+              className="gap-1.5"
+            >
+              <Pencil className="h-3.5 w-3.5" /> Edit
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="sm" variant="ghost" className="text-destructive">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete this page?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete "{data.title}" and its revision history.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={del} className="bg-destructive text-destructive-foreground">
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
+      </div>
+
+      {data.content.trim() === "" ? (
+        <p className="mt-8 text-sm text-muted-foreground italic">
+          This page is empty. {canEdit && "Click Edit to add content."}
+        </p>
+      ) : (
+        <div className="prose prose-neutral dark:prose-invert max-w-none mt-8 prose-headings:font-display prose-headings:font-semibold prose-pre:bg-paper-soft prose-pre:border prose-pre:border-border">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{data.content}</ReactMarkdown>
+        </div>
+      )}
+
+      <div className="mt-10">
+        <LinkedEntities pageId={data.id} canEdit={canEdit} />
+      </div>
+    </article>
+  );
+}
