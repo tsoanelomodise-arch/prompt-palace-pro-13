@@ -65,6 +65,7 @@ function AuthLayout() {
         <nav className="md:hidden flex items-center gap-1 px-6 pb-3 -mt-1 overflow-x-auto">
           <NavLink to="/clients" icon={<Users className="h-3.5 w-3.5" />}>Clients</NavLink>
           <NavLink to="/" icon={<Library className="h-3.5 w-3.5" />}>Prompts</NavLink>
+          <NavLink to="/wiki" icon={<BookOpen className="h-3.5 w-3.5" />}>Wiki</NavLink>
           {isAdmin && <NavLink to="/team" icon={<Shield className="h-3.5 w-3.5" />}>Team</NavLink>}
         </nav>
       </header>
