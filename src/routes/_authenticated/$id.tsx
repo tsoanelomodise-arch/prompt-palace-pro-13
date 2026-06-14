@@ -52,6 +52,16 @@ function PromptDetail() {
     },
   });
 
+  const { data: linkedClient } = useQuery({
+    queryKey: ["prompt-client", prompt?.client_id],
+    enabled: !!prompt?.client_id,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("clients").select("id,name").eq("id", prompt!.client_id!).single();
+      if (error) throw error;
+      return data as ClientLite;
+    },
+  });
+
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<{ title: string; description: string; category: string; tagsRaw: string; content: string }>({
     title: "", description: "", category: "", tagsRaw: "", content: "",
