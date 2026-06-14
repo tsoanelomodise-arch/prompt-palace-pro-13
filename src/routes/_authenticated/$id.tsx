@@ -31,7 +31,11 @@ type Prompt = {
   updated_at: string;
   created_at: string;
   user_id: string;
+  client_id: string | null;
+  project_id: string | null;
 };
+
+type ClientLite = { id: string; name: string };
 
 function PromptDetail() {
   const { id } = Route.useParams();
