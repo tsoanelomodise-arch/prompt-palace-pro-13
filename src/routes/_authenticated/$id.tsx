@@ -135,11 +135,18 @@ function PromptDetail() {
       <div className="pb-8 border-b border-border">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            {prompt.category && (
-              <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-3">
-                {prompt.category}
-              </p>
-            )}
+            <div className="flex items-center gap-3 mb-3 flex-wrap">
+              {prompt.category && (
+                <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                  {prompt.category}
+                </p>
+              )}
+              {linkedClient && (
+                <Link to="/clients/$clientId" params={{ clientId: linkedClient.id }} className="font-mono text-xs uppercase tracking-widest text-foreground hover:underline">
+                  · {linkedClient.name}
+                </Link>
+              )}
+            </div>
             {editing ? (
               <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="text-3xl h-auto py-2 font-display font-semibold" />
             ) : (
