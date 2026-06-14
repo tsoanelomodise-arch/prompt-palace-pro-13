@@ -336,6 +336,172 @@ export type Database = {
         }
         Relationships: []
       }
+      wiki_page_links: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          page_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          page_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          page_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wiki_page_links_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "wiki_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wiki_page_revisions: {
+        Row: {
+          content: string
+          created_at: string
+          edited_by: string | null
+          id: string
+          page_id: string
+          title: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          edited_by?: string | null
+          id?: string
+          page_id: string
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          edited_by?: string | null
+          id?: string
+          page_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wiki_page_revisions_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "wiki_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wiki_pages: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          excerpt: string | null
+          id: string
+          parent_id: string | null
+          position: number
+          slug: string
+          space_id: string
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          parent_id?: string | null
+          position?: number
+          slug: string
+          space_id: string
+          status?: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          parent_id?: string | null
+          position?: number
+          slug?: string
+          space_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wiki_pages_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "wiki_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wiki_pages_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "wiki_spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wiki_spaces: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
