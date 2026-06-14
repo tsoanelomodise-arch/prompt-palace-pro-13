@@ -1,5 +1,6 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -11,7 +12,12 @@ import { toast } from "sonner";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { extractVariables } from "@/lib/prompt-template";
 
+type Search = { clientId?: string };
+
 export const Route = createFileRoute("/_authenticated/new")({
+  validateSearch: (s: Record<string, unknown>): Search => ({
+    clientId: typeof s.clientId === "string" ? s.clientId : undefined,
+  }),
   component: NewPrompt,
 });
 
@@ -26,8 +32,32 @@ const schema = z.object({
 function NewPrompt() {
   const router = useRouter();
   const { user } = useAuth();
+  const { clientId: initialClient } = Route.useSearch();
   const [form, setForm] = useState({ title: "", description: "", category: "", tagsRaw: "", content: "" });
+  const [clientId, setClientId] = useState<string>(initialClient ?? "");
+  const [projectId, setProjectId] = useState<string>("");
   const [saving, setSaving] = useState(false);
+
+  const { data: clients = [] } = useQuery({
+    queryKey: ["clients-select"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("clients").select("id,name").order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ["projects-select", clientId],
+    enabled: !!clientId,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("projects").select("id,name").eq("client_id", clientId).order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  useEffect(() => { setProjectId(""); }, [clientId]);
 
   const vars = extractVariables(form.content);
 
@@ -50,6 +80,8 @@ function NewPrompt() {
         category: parsed.data.category || null,
         tags,
         content: parsed.data.content,
+        client_id: clientId || null,
+        project_id: projectId || null,
       })
       .select()
       .single();
@@ -92,6 +124,34 @@ function NewPrompt() {
           <div>
             <Label htmlFor="tags">Tags <span className="text-muted-foreground font-normal">(comma-separated)</span></Label>
             <Input id="tags" value={form.tagsRaw} onChange={(e) => setForm({ ...form, tagsRaw: e.target.value })} className="mt-1.5 h-11" placeholder="gpt-5, brand, hero" />
+          </div>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="client">Client <span className="text-muted-foreground font-normal">(optional)</span></Label>
+            <select
+              id="client"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              className="mt-1.5 h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">— None —</option>
+              {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <Label htmlFor="project">Project <span className="text-muted-foreground font-normal">(optional)</span></Label>
+            <select
+              id="project"
+              value={projectId}
+              onChange={(e) => setProjectId(e.target.value)}
+              disabled={!clientId || projects.length === 0}
+              className="mt-1.5 h-11 w-full rounded-md border border-input bg-background px-3 text-sm disabled:opacity-50"
+            >
+              <option value="">— None —</option>
+              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
           </div>
         </div>
 
