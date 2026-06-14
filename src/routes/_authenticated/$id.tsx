@@ -282,6 +282,10 @@ function PromptDetail() {
           </aside>
         </div>
       )}
+
+      <div className="mt-10">
+        <LinkedWikiPages entityType="prompt" entityId={prompt.id} />
+      </div>
     </div>
   );
 }
