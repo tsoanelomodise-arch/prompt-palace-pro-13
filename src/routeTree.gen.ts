@@ -14,6 +14,8 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedNewRouteImport } from './routes/_authenticated/new'
 import { Route as AuthenticatedIdRouteImport } from './routes/_authenticated/$id'
+import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients/index'
+import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients/new'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -39,18 +41,33 @@ const AuthenticatedIdRoute = AuthenticatedIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedClientsIndexRoute =
+  AuthenticatedClientsIndexRouteImport.update({
+    id: '/clients/',
+    path: '/clients/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedClientsNewRoute = AuthenticatedClientsNewRouteImport.update({
+  id: '/clients/new',
+  path: '/clients/new',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/$id': typeof AuthenticatedIdRoute
   '/new': typeof AuthenticatedNewRoute
+  '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/clients/': typeof AuthenticatedClientsIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/$id': typeof AuthenticatedIdRoute
   '/new': typeof AuthenticatedNewRoute
   '/': typeof AuthenticatedIndexRoute
+  '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/clients': typeof AuthenticatedClientsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -59,12 +76,14 @@ export interface FileRoutesById {
   '/_authenticated/$id': typeof AuthenticatedIdRoute
   '/_authenticated/new': typeof AuthenticatedNewRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/clients/new': typeof AuthenticatedClientsNewRoute
+  '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/$id' | '/new'
+  fullPaths: '/' | '/login' | '/$id' | '/new' | '/clients/new' | '/clients/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/$id' | '/new' | '/'
+  to: '/login' | '/$id' | '/new' | '/' | '/clients/new' | '/clients'
   id:
     | '__root__'
     | '/_authenticated'
@@ -72,6 +91,8 @@ export interface FileRouteTypes {
     | '/_authenticated/$id'
     | '/_authenticated/new'
     | '/_authenticated/'
+    | '/_authenticated/clients/new'
+    | '/_authenticated/clients/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -116,6 +137,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/clients/': {
+      id: '/_authenticated/clients/'
+      path: '/clients'
+      fullPath: '/clients/'
+      preLoaderRoute: typeof AuthenticatedClientsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/clients/new': {
+      id: '/_authenticated/clients/new'
+      path: '/clients/new'
+      fullPath: '/clients/new'
+      preLoaderRoute: typeof AuthenticatedClientsNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -123,12 +158,16 @@ interface AuthenticatedRouteChildren {
   AuthenticatedIdRoute: typeof AuthenticatedIdRoute
   AuthenticatedNewRoute: typeof AuthenticatedNewRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedClientsNewRoute: typeof AuthenticatedClientsNewRoute
+  AuthenticatedClientsIndexRoute: typeof AuthenticatedClientsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIdRoute: AuthenticatedIdRoute,
   AuthenticatedNewRoute: AuthenticatedNewRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedClientsNewRoute: AuthenticatedClientsNewRoute,
+  AuthenticatedClientsIndexRoute: AuthenticatedClientsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
