@@ -18,6 +18,7 @@ import {
   Briefcase, User as UserIcon, FileText, StickyNote, Mail, Phone, Pencil, Save, X,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
+import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 
 export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   component: ClientDetail,
