@@ -16,6 +16,7 @@ import { Route as AuthenticatedWikiRouteImport } from './routes/_authenticated/w
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedNewRouteImport } from './routes/_authenticated/new'
 import { Route as AuthenticatedIdRouteImport } from './routes/_authenticated/$id'
+import { Route as AuthenticatedWikiIndexRouteImport } from './routes/_authenticated/wiki.index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients/index'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients/new'
 import { Route as AuthenticatedClientsClientIdRouteImport } from './routes/_authenticated/clients/$clientId'
@@ -54,6 +55,11 @@ const AuthenticatedIdRoute = AuthenticatedIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedWikiIndexRoute = AuthenticatedWikiIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedWikiRoute,
+} as any)
 const AuthenticatedClientsIndexRoute =
   AuthenticatedClientsIndexRouteImport.update({
     id: '/clients/',
@@ -78,21 +84,22 @@ export interface FileRoutesByFullPath {
   '/$id': typeof AuthenticatedIdRoute
   '/new': typeof AuthenticatedNewRoute
   '/team': typeof AuthenticatedTeamRoute
-  '/wiki': typeof AuthenticatedWikiRoute
+  '/wiki': typeof AuthenticatedWikiRouteWithChildren
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
   '/clients/': typeof AuthenticatedClientsIndexRoute
+  '/wiki/': typeof AuthenticatedWikiIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/$id': typeof AuthenticatedIdRoute
   '/new': typeof AuthenticatedNewRoute
   '/team': typeof AuthenticatedTeamRoute
-  '/wiki': typeof AuthenticatedWikiRoute
   '/': typeof AuthenticatedIndexRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
   '/clients': typeof AuthenticatedClientsIndexRoute
+  '/wiki': typeof AuthenticatedWikiIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -101,11 +108,12 @@ export interface FileRoutesById {
   '/_authenticated/$id': typeof AuthenticatedIdRoute
   '/_authenticated/new': typeof AuthenticatedNewRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
-  '/_authenticated/wiki': typeof AuthenticatedWikiRoute
+  '/_authenticated/wiki': typeof AuthenticatedWikiRouteWithChildren
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/_authenticated/clients/new': typeof AuthenticatedClientsNewRoute
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
+  '/_authenticated/wiki/': typeof AuthenticatedWikiIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -119,17 +127,18 @@ export interface FileRouteTypes {
     | '/clients/$clientId'
     | '/clients/new'
     | '/clients/'
+    | '/wiki/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
     | '/$id'
     | '/new'
     | '/team'
-    | '/wiki'
     | '/'
     | '/clients/$clientId'
     | '/clients/new'
     | '/clients'
+    | '/wiki'
   id:
     | '__root__'
     | '/_authenticated'
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
     | '/_authenticated/clients/$clientId'
     | '/_authenticated/clients/new'
     | '/_authenticated/clients/'
+    | '/_authenticated/wiki/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -200,6 +210,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/wiki/': {
+      id: '/_authenticated/wiki/'
+      path: '/'
+      fullPath: '/wiki/'
+      preLoaderRoute: typeof AuthenticatedWikiIndexRouteImport
+      parentRoute: typeof AuthenticatedWikiRoute
+    }
     '/_authenticated/clients/': {
       id: '/_authenticated/clients/'
       path: '/clients'
@@ -224,11 +241,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedWikiRouteChildren {
+  AuthenticatedWikiIndexRoute: typeof AuthenticatedWikiIndexRoute
+}
+
+const AuthenticatedWikiRouteChildren: AuthenticatedWikiRouteChildren = {
+  AuthenticatedWikiIndexRoute: AuthenticatedWikiIndexRoute,
+}
+
+const AuthenticatedWikiRouteWithChildren =
+  AuthenticatedWikiRoute._addFileChildren(AuthenticatedWikiRouteChildren)
+
 interface AuthenticatedRouteChildren {
   AuthenticatedIdRoute: typeof AuthenticatedIdRoute
   AuthenticatedNewRoute: typeof AuthenticatedNewRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
-  AuthenticatedWikiRoute: typeof AuthenticatedWikiRoute
+  AuthenticatedWikiRoute: typeof AuthenticatedWikiRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedClientsClientIdRoute: typeof AuthenticatedClientsClientIdRoute
   AuthenticatedClientsNewRoute: typeof AuthenticatedClientsNewRoute
@@ -239,7 +267,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIdRoute: AuthenticatedIdRoute,
   AuthenticatedNewRoute: AuthenticatedNewRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
-  AuthenticatedWikiRoute: AuthenticatedWikiRoute,
+  AuthenticatedWikiRoute: AuthenticatedWikiRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedClientsClientIdRoute: AuthenticatedClientsClientIdRoute,
   AuthenticatedClientsNewRoute: AuthenticatedClientsNewRoute,
