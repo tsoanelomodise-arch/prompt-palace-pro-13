@@ -157,6 +157,9 @@ function OverviewPane({ client }: { client: { id: string; notes: string | null; 
         ) : (
           <p className="text-sm text-muted-foreground italic">No notes yet.</p>
         )}
+        <div className="mt-8">
+          <LinkedWikiPages entityType="client" entityId={client.id} />
+        </div>
       </div>
       <aside className="space-y-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
         <div>
