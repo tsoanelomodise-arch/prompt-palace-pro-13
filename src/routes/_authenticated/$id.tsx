@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,7 +31,11 @@ type Prompt = {
   updated_at: string;
   created_at: string;
   user_id: string;
+  client_id: string | null;
+  project_id: string | null;
 };
+
+type ClientLite = { id: string; name: string };
 
 function PromptDetail() {
   const { id } = Route.useParams();
@@ -45,6 +49,16 @@ function PromptDetail() {
       const { data, error } = await supabase.from("prompts").select("*").eq("id", id).single();
       if (error) throw error;
       return data as Prompt;
+    },
+  });
+
+  const { data: linkedClient } = useQuery({
+    queryKey: ["prompt-client", prompt?.client_id],
+    enabled: !!prompt?.client_id,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("clients").select("id,name").eq("id", prompt!.client_id!).single();
+      if (error) throw error;
+      return data as ClientLite;
     },
   });
 
@@ -121,11 +135,18 @@ function PromptDetail() {
       <div className="pb-8 border-b border-border">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            {prompt.category && (
-              <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-3">
-                {prompt.category}
-              </p>
-            )}
+            <div className="flex items-center gap-3 mb-3 flex-wrap">
+              {prompt.category && (
+                <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                  {prompt.category}
+                </p>
+              )}
+              {linkedClient && (
+                <Link to="/clients/$clientId" params={{ clientId: linkedClient.id }} className="font-mono text-xs uppercase tracking-widest text-foreground hover:underline">
+                  · {linkedClient.name}
+                </Link>
+              )}
+            </div>
             {editing ? (
               <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="text-3xl h-auto py-2 font-display font-semibold" />
             ) : (
