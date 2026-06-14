@@ -18,6 +18,7 @@ import { Route as AuthenticatedNewRouteImport } from './routes/_authenticated/ne
 import { Route as AuthenticatedIdRouteImport } from './routes/_authenticated/$id'
 import { Route as AuthenticatedWikiIndexRouteImport } from './routes/_authenticated/wiki.index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients/index'
+import { Route as AuthenticatedWikiSpaceSlugRouteImport } from './routes/_authenticated/wiki.$spaceSlug'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients/new'
 import { Route as AuthenticatedClientsClientIdRouteImport } from './routes/_authenticated/clients/$clientId'
 
@@ -66,6 +67,12 @@ const AuthenticatedClientsIndexRoute =
     path: '/clients/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedWikiSpaceSlugRoute =
+  AuthenticatedWikiSpaceSlugRouteImport.update({
+    id: '/$spaceSlug',
+    path: '/$spaceSlug',
+    getParentRoute: () => AuthenticatedWikiRoute,
+  } as any)
 const AuthenticatedClientsNewRoute = AuthenticatedClientsNewRouteImport.update({
   id: '/clients/new',
   path: '/clients/new',
@@ -87,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/wiki': typeof AuthenticatedWikiRouteWithChildren
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/wiki/$spaceSlug': typeof AuthenticatedWikiSpaceSlugRoute
   '/clients/': typeof AuthenticatedClientsIndexRoute
   '/wiki/': typeof AuthenticatedWikiIndexRoute
 }
@@ -98,6 +106,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/wiki/$spaceSlug': typeof AuthenticatedWikiSpaceSlugRoute
   '/clients': typeof AuthenticatedClientsIndexRoute
   '/wiki': typeof AuthenticatedWikiIndexRoute
 }
@@ -112,6 +121,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/_authenticated/clients/new': typeof AuthenticatedClientsNewRoute
+  '/_authenticated/wiki/$spaceSlug': typeof AuthenticatedWikiSpaceSlugRoute
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
   '/_authenticated/wiki/': typeof AuthenticatedWikiIndexRoute
 }
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/wiki'
     | '/clients/$clientId'
     | '/clients/new'
+    | '/wiki/$spaceSlug'
     | '/clients/'
     | '/wiki/'
   fileRoutesByTo: FileRoutesByTo
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '/'
     | '/clients/$clientId'
     | '/clients/new'
+    | '/wiki/$spaceSlug'
     | '/clients'
     | '/wiki'
   id:
@@ -150,6 +162,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/clients/$clientId'
     | '/_authenticated/clients/new'
+    | '/_authenticated/wiki/$spaceSlug'
     | '/_authenticated/clients/'
     | '/_authenticated/wiki/'
   fileRoutesById: FileRoutesById
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/wiki/$spaceSlug': {
+      id: '/_authenticated/wiki/$spaceSlug'
+      path: '/$spaceSlug'
+      fullPath: '/wiki/$spaceSlug'
+      preLoaderRoute: typeof AuthenticatedWikiSpaceSlugRouteImport
+      parentRoute: typeof AuthenticatedWikiRoute
+    }
     '/_authenticated/clients/new': {
       id: '/_authenticated/clients/new'
       path: '/clients/new'
@@ -242,10 +262,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedWikiRouteChildren {
+  AuthenticatedWikiSpaceSlugRoute: typeof AuthenticatedWikiSpaceSlugRoute
   AuthenticatedWikiIndexRoute: typeof AuthenticatedWikiIndexRoute
 }
 
 const AuthenticatedWikiRouteChildren: AuthenticatedWikiRouteChildren = {
+  AuthenticatedWikiSpaceSlugRoute: AuthenticatedWikiSpaceSlugRoute,
   AuthenticatedWikiIndexRoute: AuthenticatedWikiIndexRoute,
 }
 
