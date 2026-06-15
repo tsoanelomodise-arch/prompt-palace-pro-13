@@ -41,9 +41,11 @@ type ClientLite = { id: string; name: string };
 
 function PromptDetail() {
   const { id } = Route.useParams();
+  const search = Route.useSearch();
   const router = useRouter();
   const qc = useQueryClient();
   const { user } = useAuth();
+  const [duplicating, setDuplicating] = useState(false);
 
   const { data: prompt, isLoading } = useQuery({
     queryKey: ["prompts", id],
