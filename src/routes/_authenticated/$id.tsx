@@ -13,13 +13,14 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Copy, Pencil, Save, Trash2, X, Sparkles, Check } from "lucide-react";
+import { ArrowLeft, Copy, CopyPlus, Pencil, Save, Trash2, X, Sparkles, Check } from "lucide-react";
 import { extractVariables, fillTemplate } from "@/lib/prompt-template";
 import { formatDistanceToNow } from "date-fns";
 import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 
 export const Route = createFileRoute("/_authenticated/$id")({
   component: PromptDetail,
+  validateSearch: (s: Record<string, unknown>) => ({ edit: s.edit === "1" || s.edit === 1 || s.edit === true ? true : undefined }),
 });
 
 type Prompt = {
@@ -40,9 +41,11 @@ type ClientLite = { id: string; name: string };
 
 function PromptDetail() {
   const { id } = Route.useParams();
+  const search = Route.useSearch();
   const router = useRouter();
   const qc = useQueryClient();
   const { user } = useAuth();
+  const [duplicating, setDuplicating] = useState(false);
 
   const { data: prompt, isLoading } = useQuery({
     queryKey: ["prompts", id],
@@ -82,6 +85,13 @@ function PromptDetail() {
     }
   }, [prompt]);
 
+  useEffect(() => {
+    if (search.edit && prompt && user?.id === prompt.user_id) {
+      setEditing(true);
+    }
+  }, [search.edit, prompt, user?.id]);
+
+
   const vars = useMemo(() => extractVariables(prompt?.content ?? ""), [prompt?.content]);
   const filled = useMemo(() => prompt ? fillTemplate(prompt.content, values) : "", [prompt, values]);
   const isOwner = user?.id === prompt?.user_id;
@@ -117,6 +127,26 @@ function PromptDetail() {
     toast.success("Deleted");
     qc.invalidateQueries({ queryKey: ["prompts"] });
     router.navigate({ to: "/" });
+  };
+
+  const duplicate = async () => {
+    if (!prompt || !user) return;
+    setDuplicating(true);
+    const { data, error } = await supabase.from("prompts").insert({
+      title: `${prompt.title} (copy)`,
+      description: prompt.description,
+      content: prompt.content,
+      category: prompt.category,
+      tags: prompt.tags,
+      client_id: prompt.client_id,
+      project_id: prompt.project_id,
+      user_id: user.id,
+    }).select("id").single();
+    setDuplicating(false);
+    if (error || !data) { toast.error(error?.message ?? "Failed to duplicate"); return; }
+    toast.success("Duplicated — edit your copy");
+    qc.invalidateQueries({ queryKey: ["prompts"] });
+    router.navigate({ to: "/$id", params: { id: data.id }, search: { edit: true } });
   };
 
   if (isLoading || !prompt) {
@@ -159,6 +189,11 @@ function PromptDetail() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            {!editing && (
+              <Button variant="outline" size="sm" onClick={duplicate} disabled={duplicating} className="gap-1.5">
+                <CopyPlus className="h-3.5 w-3.5" /> {duplicating ? "Duplicating…" : "Duplicate"}
+              </Button>
+            )}
             {isOwner && !editing && (
               <>
                 <Button variant="outline" size="sm" onClick={() => setEditing(true)} className="gap-1.5">
