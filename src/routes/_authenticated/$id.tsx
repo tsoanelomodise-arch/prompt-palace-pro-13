@@ -13,13 +13,14 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Copy, Pencil, Save, Trash2, X, Sparkles, Check } from "lucide-react";
+import { ArrowLeft, Copy, CopyPlus, Pencil, Save, Trash2, X, Sparkles, Check } from "lucide-react";
 import { extractVariables, fillTemplate } from "@/lib/prompt-template";
 import { formatDistanceToNow } from "date-fns";
 import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 
 export const Route = createFileRoute("/_authenticated/$id")({
   component: PromptDetail,
+  validateSearch: (s: Record<string, unknown>) => ({ edit: s.edit === "1" || s.edit === 1 || s.edit === true ? true : undefined }),
 });
 
 type Prompt = {
