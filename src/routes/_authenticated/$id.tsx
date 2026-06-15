@@ -118,6 +118,9 @@ function PromptDetail() {
     setEditing(false);
     qc.invalidateQueries({ queryKey: ["prompts"] });
     qc.invalidateQueries({ queryKey: ["prompts", id] });
+    if (search.edit) {
+      router.navigate({ to: "/$id", params: { id }, search: {} });
+    }
   };
 
   const del = async () => {
