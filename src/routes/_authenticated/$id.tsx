@@ -129,6 +129,26 @@ function PromptDetail() {
     router.navigate({ to: "/" });
   };
 
+  const duplicate = async () => {
+    if (!prompt || !user) return;
+    setDuplicating(true);
+    const { data, error } = await supabase.from("prompts").insert({
+      title: `${prompt.title} (copy)`,
+      description: prompt.description,
+      content: prompt.content,
+      category: prompt.category,
+      tags: prompt.tags,
+      client_id: prompt.client_id,
+      project_id: prompt.project_id,
+      user_id: user.id,
+    }).select("id").single();
+    setDuplicating(false);
+    if (error || !data) { toast.error(error?.message ?? "Failed to duplicate"); return; }
+    toast.success("Duplicated — edit your copy");
+    qc.invalidateQueries({ queryKey: ["prompts"] });
+    router.navigate({ to: "/$id", params: { id: data.id }, search: { edit: true } });
+  };
+
   if (isLoading || !prompt) {
     return <div className="mx-auto max-w-5xl px-6 py-10 text-sm text-muted-foreground">Loading…</div>;
   }
