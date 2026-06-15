@@ -189,6 +189,11 @@ function PromptDetail() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            {!editing && (
+              <Button variant="outline" size="sm" onClick={duplicate} disabled={duplicating} className="gap-1.5">
+                <CopyPlus className="h-3.5 w-3.5" /> {duplicating ? "Duplicating…" : "Duplicate"}
+              </Button>
+            )}
             {isOwner && !editing && (
               <>
                 <Button variant="outline" size="sm" onClick={() => setEditing(true)} className="gap-1.5">
