@@ -85,6 +85,13 @@ function PromptDetail() {
     }
   }, [prompt]);
 
+  useEffect(() => {
+    if (search.edit && prompt && user?.id === prompt.user_id) {
+      setEditing(true);
+    }
+  }, [search.edit, prompt, user?.id]);
+
+
   const vars = useMemo(() => extractVariables(prompt?.content ?? ""), [prompt?.content]);
   const filled = useMemo(() => prompt ? fillTemplate(prompt.content, values) : "", [prompt, values]);
   const isOwner = user?.id === prompt?.user_id;
