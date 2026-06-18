@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft, ExternalLink, Plus, KeyRound, Eye, EyeOff, Copy, Trash2,
   Briefcase, User as UserIcon, FileText, StickyNote, Mail, Phone, Pencil, Save, X,
+  MessageSquare, PhoneCall, Users, MessageCircle, CalendarClock,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   component: ClientDetail,
 });
 
-type Tab = "overview" | "projects" | "contacts" | "credentials" | "prompts" | "notes";
+type Tab = "overview" | "projects" | "contacts" | "credentials" | "prompts" | "conversations" | "notes";
 
 function ClientDetail() {
   const { clientId } = Route.useParams();
@@ -82,6 +83,7 @@ function ClientDetail() {
             ["contacts", "Contacts", <UserIcon key="c" className="h-3.5 w-3.5" />],
             ["credentials", "Logins", <KeyRound key="k" className="h-3.5 w-3.5" />],
             ["prompts", "Prompts", <FileText key="f" className="h-3.5 w-3.5" />],
+            ["conversations", "Conversations", <MessageSquare key="v" className="h-3.5 w-3.5" />],
             ["notes", "Notes", <StickyNote key="n" className="h-3.5 w-3.5" />],
           ] as const
         ).map(([k, label, icon]) => (
@@ -106,6 +108,7 @@ function ClientDetail() {
         {tab === "contacts" && <ContactsPane clientId={clientId} />}
         {tab === "credentials" && <CredentialsPane clientId={clientId} />}
         {tab === "prompts" && <PromptsPane clientId={clientId} />}
+        {tab === "conversations" && <ConversationsPane clientId={clientId} />}
         {tab === "notes" && <NotesPane clientId={clientId} />}
       </div>
     </div>
@@ -669,6 +672,272 @@ function EmptyTab({ icon, title, hint }: { icon: React.ReactNode; title: string;
       <div className="mx-auto w-fit">{icon}</div>
       <h3 className="mt-3 font-display text-lg font-semibold text-foreground">{title}</h3>
       <p className="mt-1 text-sm">{hint}</p>
+    </div>
+  );
+}
+
+// =====================================================
+// Conversations
+// =====================================================
+type ConvChannel = "email" | "call" | "meeting" | "whatsapp" | "sms" | "other";
+const CHANNELS: { value: ConvChannel; label: string; icon: React.ReactNode }[] = [
+  { value: "meeting", label: "Meeting", icon: <Users className="h-3.5 w-3.5" /> },
+  { value: "call", label: "Call", icon: <PhoneCall className="h-3.5 w-3.5" /> },
+  { value: "email", label: "Email", icon: <Mail className="h-3.5 w-3.5" /> },
+  { value: "whatsapp", label: "WhatsApp", icon: <MessageCircle className="h-3.5 w-3.5" /> },
+  { value: "sms", label: "SMS", icon: <MessageSquare className="h-3.5 w-3.5" /> },
+  { value: "other", label: "Other", icon: <MessageSquare className="h-3.5 w-3.5" /> },
+];
+
+function toLocalInputValue(d: Date) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function ConversationsPane({ clientId }: { clientId: string }) {
+  const qc = useQueryClient();
+  const { user, isAdmin } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const emptyForm = () => ({
+    channel: "meeting" as ConvChannel,
+    subject: "",
+    summary: "",
+    participants: "",
+    occurred_at: toLocalInputValue(new Date()),
+    follow_up_at: "",
+    contact_id: "",
+    project_id: "",
+  });
+  const [form, setForm] = useState(emptyForm());
+  const [saving, setSaving] = useState(false);
+
+  const { data: convos = [] } = useQuery({
+    queryKey: ["client-conversations", clientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("client_conversations")
+        .select("*, contact:contacts(id,name), project:projects(id,name)")
+        .eq("client_id", clientId)
+        .order("occurred_at", { ascending: false });
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+
+  const { data: contacts = [] } = useQuery({
+    queryKey: ["client-contacts-mini", clientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contacts").select("id,name").eq("client_id", clientId).order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ["client-projects-mini", clientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("projects").select("id,name").eq("client_id", clientId).order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const resetForm = () => { setForm(emptyForm()); setEditingId(null); setOpen(false); };
+
+  const openNew = () => { setForm(emptyForm()); setEditingId(null); setOpen(true); };
+
+  const openEdit = (c: any) => {
+    setEditingId(c.id);
+    setForm({
+      channel: c.channel,
+      subject: c.subject,
+      summary: c.summary,
+      participants: c.participants ?? "",
+      occurred_at: toLocalInputValue(new Date(c.occurred_at)),
+      follow_up_at: c.follow_up_at ? toLocalInputValue(new Date(c.follow_up_at)) : "",
+      contact_id: c.contact_id ?? "",
+      project_id: c.project_id ?? "",
+    });
+    setOpen(true);
+  };
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !form.subject.trim() || !form.summary.trim()) return;
+    setSaving(true);
+    const payload = {
+      client_id: clientId,
+      channel: form.channel,
+      subject: form.subject.trim(),
+      summary: form.summary.trim(),
+      participants: form.participants.trim() || null,
+      occurred_at: new Date(form.occurred_at).toISOString(),
+      follow_up_at: form.follow_up_at ? new Date(form.follow_up_at).toISOString() : null,
+      contact_id: form.contact_id || null,
+      project_id: form.project_id || null,
+    };
+    const { error } = editingId
+      ? await supabase.from("client_conversations").update(payload).eq("id", editingId)
+      : await supabase.from("client_conversations").insert({ ...payload, created_by: user.id });
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success(editingId ? "Updated" : "Logged");
+    qc.invalidateQueries({ queryKey: ["client-conversations", clientId] });
+    resetForm();
+  };
+
+  const remove = async (id: string) => {
+    const { error } = await supabase.from("client_conversations").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Deleted");
+    qc.invalidateQueries({ queryKey: ["client-conversations", clientId] });
+  };
+
+  return (
+    <div className="max-w-3xl">
+      <div className="mb-6 flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {convos.length} conversation{convos.length === 1 ? "" : "s"} logged
+        </p>
+        {!open && (
+          <Button onClick={openNew} size="sm">
+            <Plus className="h-4 w-4 mr-1" /> Log conversation
+          </Button>
+        )}
+      </div>
+
+      {open && (
+        <form onSubmit={save} className="mb-8 rounded-lg border border-border p-4 grid gap-3 sm:grid-cols-2">
+          <div className="sm:col-span-2 flex flex-wrap gap-1.5">
+            {CHANNELS.map((c) => (
+              <button
+                type="button"
+                key={c.value}
+                onClick={() => setForm({ ...form, channel: c.value })}
+                className={`flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest px-2.5 py-1.5 rounded border transition ${
+                  form.channel === c.value
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {c.icon}{c.label}
+              </button>
+            ))}
+          </div>
+          <div className="sm:col-span-2">
+            <Label className="text-xs">Subject</Label>
+            <Input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} className="mt-1" placeholder="e.g. Kickoff meeting, Pricing follow-up" required />
+          </div>
+          <div className="sm:col-span-2">
+            <Label className="text-xs">Summary</Label>
+            <Textarea value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} className="mt-1 min-h-[120px]" placeholder="What was discussed, decisions, action items…" required />
+          </div>
+          <div>
+            <Label className="text-xs">When</Label>
+            <Input type="datetime-local" value={form.occurred_at} onChange={(e) => setForm({ ...form, occurred_at: e.target.value })} className="mt-1" required />
+          </div>
+          <div>
+            <Label className="text-xs">Follow up (optional)</Label>
+            <Input type="datetime-local" value={form.follow_up_at} onChange={(e) => setForm({ ...form, follow_up_at: e.target.value })} className="mt-1" />
+          </div>
+          <div>
+            <Label className="text-xs">Participants</Label>
+            <Input value={form.participants} onChange={(e) => setForm({ ...form, participants: e.target.value })} className="mt-1" placeholder="Names, comma separated" />
+          </div>
+          <div>
+            <Label className="text-xs">Contact</Label>
+            <select
+              value={form.contact_id}
+              onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
+              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">—</option>
+              {contacts.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div className="sm:col-span-2">
+            <Label className="text-xs">Project (optional)</Label>
+            <select
+              value={form.project_id}
+              onChange={(e) => setForm({ ...form, project_id: e.target.value })}
+              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">—</option>
+              {projects.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+          <div className="sm:col-span-2 flex justify-end gap-2">
+            <Button type="button" variant="ghost" size="sm" onClick={resetForm}>Cancel</Button>
+            <Button type="submit" size="sm" disabled={saving}>
+              {saving ? "Saving…" : editingId ? "Update" : "Log conversation"}
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {convos.length === 0 ? (
+        <EmptyTab icon={<MessageSquare className="h-8 w-8" />} title="No conversations yet" hint="Log calls, meetings, and emails to keep a shared history." />
+      ) : (
+        <ol className="relative border-l border-border pl-6 space-y-6">
+          {convos.map((c) => {
+            const ch = CHANNELS.find((x) => x.value === c.channel) ?? CHANNELS[0];
+            const canEdit = isAdmin || c.created_by === user?.id;
+            return (
+              <li key={c.id} className="relative">
+                <span className="absolute -left-[31px] top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background text-foreground">
+                  {ch.icon}
+                </span>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      {ch.label} · {format(new Date(c.occurred_at), "PPp")}
+                    </p>
+                    <h4 className="mt-1 font-display text-base font-semibold">{c.subject}</h4>
+                  </div>
+                  {canEdit && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(c)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete conversation?</AlertDialogTitle>
+                            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => remove(c.id)}>Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  )}
+                </div>
+                <p className="mt-2 text-sm whitespace-pre-wrap">{c.summary}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  {c.participants && <span>With: {c.participants}</span>}
+                  {c.contact && <span>Contact: {c.contact.name}</span>}
+                  {c.project && <span>Project: {c.project.name}</span>}
+                  {c.follow_up_at && (
+                    <span className="inline-flex items-center gap-1 text-foreground">
+                      <CalendarClock className="h-3 w-3" /> Follow up {format(new Date(c.follow_up_at), "PP")}
+                    </span>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      )}
     </div>
   );
 }
