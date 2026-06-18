@@ -14,6 +14,76 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_conversations: {
+        Row: {
+          channel: Database["public"]["Enums"]["conversation_channel"]
+          client_id: string
+          contact_id: string | null
+          created_at: string
+          created_by: string | null
+          follow_up_at: string | null
+          id: string
+          occurred_at: string
+          participants: string | null
+          project_id: string | null
+          subject: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          channel?: Database["public"]["Enums"]["conversation_channel"]
+          client_id: string
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          follow_up_at?: string | null
+          id?: string
+          occurred_at?: string
+          participants?: string | null
+          project_id?: string | null
+          subject: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["conversation_channel"]
+          client_id?: string
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          follow_up_at?: string | null
+          id?: string
+          occurred_at?: string
+          participants?: string | null
+          project_id?: string | null
+          subject?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_conversations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_conversations_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_conversations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_notes: {
         Row: {
           body: string
@@ -523,6 +593,13 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "member"
+      conversation_channel:
+        | "email"
+        | "call"
+        | "meeting"
+        | "whatsapp"
+        | "sms"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -651,6 +728,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "member"],
+      conversation_channel: [
+        "email",
+        "call",
+        "meeting",
+        "whatsapp",
+        "sms",
+        "other",
+      ],
     },
   },
 } as const
