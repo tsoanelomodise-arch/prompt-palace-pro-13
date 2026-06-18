@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft, ExternalLink, Plus, KeyRound, Eye, EyeOff, Copy, Trash2,
   Briefcase, User as UserIcon, FileText, StickyNote, Mail, Phone, Pencil, Save, X,
+  MessageSquare, PhoneCall, Users, MessageCircle, CalendarClock,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   component: ClientDetail,
 });
 
-type Tab = "overview" | "projects" | "contacts" | "credentials" | "prompts" | "notes";
+type Tab = "overview" | "projects" | "contacts" | "credentials" | "prompts" | "conversations" | "notes";
 
 function ClientDetail() {
   const { clientId } = Route.useParams();
