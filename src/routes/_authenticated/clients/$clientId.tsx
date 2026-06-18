@@ -83,6 +83,7 @@ function ClientDetail() {
             ["contacts", "Contacts", <UserIcon key="c" className="h-3.5 w-3.5" />],
             ["credentials", "Logins", <KeyRound key="k" className="h-3.5 w-3.5" />],
             ["prompts", "Prompts", <FileText key="f" className="h-3.5 w-3.5" />],
+            ["conversations", "Conversations", <MessageSquare key="v" className="h-3.5 w-3.5" />],
             ["notes", "Notes", <StickyNote key="n" className="h-3.5 w-3.5" />],
           ] as const
         ).map(([k, label, icon]) => (
