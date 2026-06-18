@@ -108,6 +108,7 @@ function ClientDetail() {
         {tab === "contacts" && <ContactsPane clientId={clientId} />}
         {tab === "credentials" && <CredentialsPane clientId={clientId} />}
         {tab === "prompts" && <PromptsPane clientId={clientId} />}
+        {tab === "conversations" && <ConversationsPane clientId={clientId} />}
         {tab === "notes" && <NotesPane clientId={clientId} />}
       </div>
     </div>
