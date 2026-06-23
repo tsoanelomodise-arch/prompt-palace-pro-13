@@ -1,9 +1,10 @@
-import { forwardRef, useRef, useImperativeHandle, useState } from "react";
+import { forwardRef, useRef, useImperativeHandle, useState, useMemo } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ImagePlus, Loader2 } from "lucide-react";
+import { ImagePlus, Loader2, Eye, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Markdown } from "@/components/ui/markdown";
 
 const MAX_DIMENSION = 1600;
 const JPEG_QUALITY = 0.82;
