@@ -13,7 +13,7 @@ import { Save, X, Eye, Edit3 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-export const Route = createFileRoute("/_authenticated/wiki/$spaceSlug/$pageSlug/edit")({
+export const Route = createFileRoute("/_authenticated/wiki/$spaceSlug/$pageSlug_/edit")({
   component: PageEdit,
 });
 
