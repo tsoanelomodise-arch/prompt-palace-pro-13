@@ -1,10 +1,12 @@
-import { forwardRef, useRef, useImperativeHandle, useState, useMemo } from "react";
+import { forwardRef, useRef, useImperativeHandle, useState, useMemo, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ImagePlus, Loader2, Eye, Pencil, X } from "lucide-react";
+import { ImagePlus, Loader2, Eye, Pencil, X, AtSign, FileText, StickyNote, MessageSquare, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Markdown } from "@/components/ui/markdown";
+import { useServerFn } from "@tanstack/react-start";
+import { searchReferences, type ReferenceItem, type ReferenceKind } from "@/lib/references.functions";
 
 const MAX_DIMENSION = 1600;
 const JPEG_QUALITY = 0.82;
