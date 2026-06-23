@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageTextarea } from "@/components/ui/image-textarea";
+import { Markdown } from "@/components/ui/markdown";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -145,7 +147,7 @@ function OverviewPane({ client }: { client: { id: string; notes: string | null; 
         </div>
         {editing ? (
           <div className="space-y-3">
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="min-h-[200px]" />
+            <ImageTextarea value={notes} onValueChange={setNotes} className="min-h-[200px]" />
             <div className="flex gap-2">
               <Button size="sm" onClick={save}><Save className="h-3.5 w-3.5 mr-1.5" /> Save</Button>
               <Button size="sm" variant="ghost" onClick={() => { setNotes(client.notes ?? ""); setEditing(false); }}>
@@ -154,9 +156,9 @@ function OverviewPane({ client }: { client: { id: string; notes: string | null; 
             </div>
           </div>
         ) : client.notes ? (
-          <p className="whitespace-pre-wrap text-sm leading-relaxed bg-card border border-border rounded-lg p-5">
-            {client.notes}
-          </p>
+          <div className="bg-card border border-border rounded-lg p-5">
+            <Markdown>{client.notes}</Markdown>
+          </div>
         ) : (
           <p className="text-sm text-muted-foreground italic">No notes yet.</p>
         )}
@@ -637,9 +639,9 @@ function NotesPane({ clientId }: { clientId: string }) {
   return (
     <div className="max-w-3xl">
       <form onSubmit={add} className="mb-6">
-        <Textarea
+        <ImageTextarea
           value={body}
-          onChange={(e) => setBody(e.target.value)}
+          onValueChange={setBody}
           placeholder="Log a call, meeting, or quick update…"
           className="min-h-[100px]"
         />
@@ -657,7 +659,7 @@ function NotesPane({ clientId }: { clientId: string }) {
               <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                 {format(new Date(n.created_at), "PPp")}
               </p>
-              <p className="mt-2 text-sm whitespace-pre-wrap">{n.body}</p>
+              <Markdown className="mt-2">{n.body}</Markdown>
             </li>
           ))}
         </ol>
@@ -833,7 +835,7 @@ function ConversationsPane({ clientId }: { clientId: string }) {
           </div>
           <div className="sm:col-span-2">
             <Label className="text-xs">Summary</Label>
-            <Textarea value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} className="mt-1 min-h-[120px]" placeholder="What was discussed, decisions, action items…" required />
+            <ImageTextarea value={form.summary} onValueChange={(v) => setForm({ ...form, summary: v })} className="mt-1 min-h-[120px]" placeholder="What was discussed, decisions, action items…" required />
           </div>
           <div>
             <Label className="text-xs">When</Label>
@@ -922,7 +924,7 @@ function ConversationsPane({ clientId }: { clientId: string }) {
                     </div>
                   )}
                 </div>
-                <p className="mt-2 text-sm whitespace-pre-wrap">{c.summary}</p>
+                <Markdown className="mt-2">{c.summary}</Markdown>
                 <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   {c.participants && <span>With: {c.participants}</span>}
                   {c.contact && <span>Contact: {c.contact.name}</span>}

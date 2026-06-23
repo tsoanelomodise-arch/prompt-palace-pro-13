@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageTextarea } from "@/components/ui/image-textarea";
 import { toast } from "sonner";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { extractVariables } from "@/lib/prompt-template";
@@ -162,11 +163,11 @@ function NewPrompt() {
               Use <code className="px-1 bg-paper-soft rounded">{`{{variable}}`}</code> for placeholders
             </span>
           </div>
-          <Textarea
+          <ImageTextarea
             id="content"
             required
             value={form.content}
-            onChange={(e) => setForm({ ...form, content: e.target.value })}
+            onValueChange={(v) => setForm({ ...form, content: v })}
             className="mt-1.5 font-mono text-sm min-h-[280px] resize-y"
             placeholder={"You are a senior copywriter for {{brand}}.\n\nWrite a {{tone}} hero headline about {{topic}}."}
           />
