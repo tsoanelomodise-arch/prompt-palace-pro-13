@@ -1,10 +1,12 @@
-import { forwardRef, useRef, useImperativeHandle, useState, useMemo } from "react";
+import { forwardRef, useRef, useImperativeHandle, useState, useMemo, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ImagePlus, Loader2, Eye, Pencil, X } from "lucide-react";
+import { ImagePlus, Loader2, Eye, Pencil, X, AtSign, FileText, StickyNote, MessageSquare, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Markdown } from "@/components/ui/markdown";
+import { useServerFn } from "@tanstack/react-start";
+import { searchReferences, type ReferenceItem, type ReferenceKind } from "@/lib/references.functions";
 
 const MAX_DIMENSION = 1600;
 const JPEG_QUALITY = 0.82;
@@ -98,6 +100,116 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
       });
     };
 
+    // ---------- @-mention reference picker ----------
+    const runSearch = useServerFn(searchReferences);
+    const [mention, setMention] = useState<{
+      open: boolean;
+      query: string;
+      anchorStart: number; // index of the '@' in the textarea value
+      items: ReferenceItem[];
+      loading: boolean;
+      activeIndex: number;
+    }>({ open: false, query: "", anchorStart: -1, items: [], loading: false, activeIndex: 0 });
+
+    // Debounced search whenever the mention query changes.
+    useEffect(() => {
+      if (!mention.open) return;
+      let cancelled = false;
+      setMention((m) => ({ ...m, loading: true }));
+      const t = setTimeout(async () => {
+        try {
+          const items = await runSearch({ data: { query: mention.query } });
+          if (!cancelled) {
+            setMention((m) =>
+              m.open ? { ...m, items, loading: false, activeIndex: 0 } : m,
+            );
+          }
+        } catch {
+          if (!cancelled) setMention((m) => ({ ...m, loading: false, items: [] }));
+        }
+      }, 150);
+      return () => {
+        cancelled = true;
+        clearTimeout(t);
+      };
+    }, [mention.open, mention.query, runSearch]);
+
+    const closeMention = () =>
+      setMention({ open: false, query: "", anchorStart: -1, items: [], loading: false, activeIndex: 0 });
+
+    const selectReference = (item: ReferenceItem) => {
+      const el = innerRef.current;
+      if (!el || mention.anchorStart < 0) {
+        closeMention();
+        return;
+      }
+      const caret = el.selectionStart ?? value.length;
+      const before = value.slice(0, mention.anchorStart);
+      const after = value.slice(caret);
+      const safeLabel = item.label.replace(/[\[\]]/g, "");
+      const snippet = `[${safeLabel}](${item.url})`;
+      const next = before + snippet + after;
+      onValueChange(next);
+      const pos = before.length + snippet.length;
+      requestAnimationFrame(() => {
+        el.focus();
+        el.setSelectionRange(pos, pos);
+      });
+      closeMention();
+    };
+
+    const onTextareaChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
+      const next = e.target.value;
+      onValueChange(next);
+      const caret = e.target.selectionStart ?? next.length;
+      // Look back from the caret for the most recent '@' that starts a token.
+      const upto = next.slice(0, caret);
+      const m = upto.match(/(?:^|\s)@([\w-]{0,40})$/);
+      if (m) {
+        const query = m[1];
+        const anchorStart = caret - query.length - 1; // index of '@'
+        setMention((prev) => ({
+          ...prev,
+          open: true,
+          query,
+          anchorStart,
+        }));
+      } else if (mention.open) {
+        closeMention();
+      }
+    };
+
+    const onTextareaKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
+      if (!mention.open || mention.items.length === 0) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setMention((m) => ({ ...m, activeIndex: (m.activeIndex + 1) % m.items.length }));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setMention((m) => ({
+          ...m,
+          activeIndex: (m.activeIndex - 1 + m.items.length) % m.items.length,
+        }));
+      } else if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault();
+        selectReference(mention.items[mention.activeIndex]);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        closeMention();
+      }
+    };
+
+    const kindIcon = (k: ReferenceKind) => {
+      switch (k) {
+        case "prompt": return <FileText className="h-3.5 w-3.5" />;
+        case "note": return <StickyNote className="h-3.5 w-3.5" />;
+        case "conversation": return <MessageSquare className="h-3.5 w-3.5" />;
+        case "wiki": return <BookOpen className="h-3.5 w-3.5" />;
+      }
+    };
+    // ---------- end mention picker ----------
+
+
     const handleFiles = async (files: FileList | File[]) => {
       const images = Array.from(files).filter((f) => f.type.startsWith("image/"));
       if (images.length === 0) return;
@@ -161,7 +273,9 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
           <Textarea
             ref={innerRef}
             value={value}
-            onChange={(e) => onValueChange(e.target.value)}
+            onChange={onTextareaChange}
+            onKeyDown={onTextareaKeyDown}
+            onBlur={() => setTimeout(closeMention, 150)}
             onPaste={onPaste}
             onDrop={onDrop}
             onDragOver={(e) => {
@@ -175,6 +289,41 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
             {...rest}
           />
         )}
+
+        {!showPreview && mention.open && (
+          <div className="absolute left-2 top-full z-50 mt-1 w-80 max-w-[calc(100%-1rem)] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-lg">
+            <div className="border-b border-border px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+              {mention.loading ? "Searching…" : mention.items.length > 0 ? `Reference @${mention.query}` : "No matches"}
+            </div>
+            <ul className="max-h-64 overflow-y-auto py-1">
+              {mention.items.map((item, i) => (
+                <li key={`${item.kind}-${item.id}`}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      selectReference(item);
+                    }}
+                    onMouseEnter={() => setMention((m) => ({ ...m, activeIndex: i }))}
+                    className={cn(
+                      "flex w-full items-start gap-2 px-3 py-1.5 text-left text-sm",
+                      i === mention.activeIndex ? "bg-accent text-accent-foreground" : "hover:bg-accent/60",
+                    )}
+                  >
+                    <span className="mt-0.5 text-muted-foreground">{kindIcon(item.kind)}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{item.label}</span>
+                      {item.sublabel && (
+                        <span className="block truncate text-xs text-muted-foreground">{item.sublabel}</span>
+                      )}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
 
         {!showPreview && images.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
@@ -207,9 +356,43 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
             <span>
               {showPreview
                 ? "Preview"
-                : `Paste or drop images · Markdown${images.length ? ` · ${images.length} image${images.length === 1 ? "" : "s"}` : ""}`}
+                : `Type @ to reference · Paste or drop images${images.length ? ` · ${images.length} image${images.length === 1 ? "" : "s"}` : ""}`}
             </span>
             <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1.5"
+                disabled={showPreview}
+                onClick={() => {
+                  const el = innerRef.current;
+                  if (!el) return;
+                  el.focus();
+                  const caret = el.selectionStart ?? value.length;
+                  const before = value.slice(0, caret);
+                  const after = value.slice(caret);
+                  const needsSpace = before.length > 0 && !/\s$/.test(before);
+                  const insert = (needsSpace ? " " : "") + "@";
+                  onValueChange(before + insert + after);
+                  const newCaret = caret + insert.length;
+                  requestAnimationFrame(() => {
+                    el.focus();
+                    el.setSelectionRange(newCaret, newCaret);
+                    setMention({
+                      open: true,
+                      query: "",
+                      anchorStart: newCaret - 1,
+                      items: [],
+                      loading: true,
+                      activeIndex: 0,
+                    });
+                  });
+                }}
+              >
+                <AtSign className="h-3 w-3" />
+                Reference
+              </Button>
               <Button
                 type="button"
                 variant="ghost"
