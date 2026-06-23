@@ -356,7 +356,7 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
             <span>
               {showPreview
                 ? "Preview"
-                : `Paste or drop images · Markdown${images.length ? ` · ${images.length} image${images.length === 1 ? "" : "s"}` : ""}`}
+                : `Type @ to reference · Paste or drop images${images.length ? ` · ${images.length} image${images.length === 1 ? "" : "s"}` : ""}`}
             </span>
             <div className="flex items-center gap-1">
               <Button
