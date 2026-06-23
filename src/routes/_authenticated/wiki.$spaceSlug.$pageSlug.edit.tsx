@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageTextarea } from "@/components/ui/image-textarea";
 import { toast } from "sonner";
 import { Save, X, Eye, Edit3 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -177,9 +178,9 @@ function PageEdit() {
             </span>
           </div>
           {view === "edit" ? (
-            <Textarea
+            <ImageTextarea
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onValueChange={setContent}
               className="mt-1 font-mono text-sm min-h-[500px]"
               placeholder="# Heading&#10;&#10;Write your knowledge here…"
             />

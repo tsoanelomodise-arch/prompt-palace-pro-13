@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageTextarea } from "@/components/ui/image-textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -261,7 +262,7 @@ function PromptDetail() {
           </div>
           <div>
             <Label>Prompt</Label>
-            <Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} className="mt-1.5 font-mono text-sm min-h-[320px]" />
+            <ImageTextarea value={form.content} onValueChange={(v) => setForm({ ...form, content: v })} className="mt-1.5 font-mono text-sm min-h-[320px]" />
           </div>
         </div>
       ) : (
