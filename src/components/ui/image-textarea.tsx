@@ -62,6 +62,24 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [busy, setBusy] = useState(false);
     const [dragOver, setDragOver] = useState(false);
+    const [showPreview, setShowPreview] = useState(false);
+
+    // Parse out image markdown entries for inline thumbnails.
+    const images = useMemo(() => {
+      const re = /!\[([^\]]*)\]\(([^)\s]+)\)/g;
+      const out: { alt: string; url: string; match: string }[] = [];
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(value)) !== null) {
+        out.push({ alt: m[1], url: m[2], match: m[0] });
+      }
+      return out;
+    }, [value]);
+
+    const removeImage = (match: string) => {
+      // Remove the markdown token and tidy surrounding blank lines.
+      const next = value.replace(match, "").replace(/\n{3,}/g, "\n\n");
+      onValueChange(next);
+    };
 
     const insertAtCursor = (snippet: string) => {
       const el = innerRef.current;
