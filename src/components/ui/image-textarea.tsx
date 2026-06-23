@@ -100,6 +100,116 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
       });
     };
 
+    // ---------- @-mention reference picker ----------
+    const runSearch = useServerFn(searchReferences);
+    const [mention, setMention] = useState<{
+      open: boolean;
+      query: string;
+      anchorStart: number; // index of the '@' in the textarea value
+      items: ReferenceItem[];
+      loading: boolean;
+      activeIndex: number;
+    }>({ open: false, query: "", anchorStart: -1, items: [], loading: false, activeIndex: 0 });
+
+    // Debounced search whenever the mention query changes.
+    useEffect(() => {
+      if (!mention.open) return;
+      let cancelled = false;
+      setMention((m) => ({ ...m, loading: true }));
+      const t = setTimeout(async () => {
+        try {
+          const items = await runSearch({ data: { query: mention.query } });
+          if (!cancelled) {
+            setMention((m) =>
+              m.open ? { ...m, items, loading: false, activeIndex: 0 } : m,
+            );
+          }
+        } catch {
+          if (!cancelled) setMention((m) => ({ ...m, loading: false, items: [] }));
+        }
+      }, 150);
+      return () => {
+        cancelled = true;
+        clearTimeout(t);
+      };
+    }, [mention.open, mention.query, runSearch]);
+
+    const closeMention = () =>
+      setMention({ open: false, query: "", anchorStart: -1, items: [], loading: false, activeIndex: 0 });
+
+    const selectReference = (item: ReferenceItem) => {
+      const el = innerRef.current;
+      if (!el || mention.anchorStart < 0) {
+        closeMention();
+        return;
+      }
+      const caret = el.selectionStart ?? value.length;
+      const before = value.slice(0, mention.anchorStart);
+      const after = value.slice(caret);
+      const safeLabel = item.label.replace(/[\[\]]/g, "");
+      const snippet = `[${safeLabel}](${item.url})`;
+      const next = before + snippet + after;
+      onValueChange(next);
+      const pos = before.length + snippet.length;
+      requestAnimationFrame(() => {
+        el.focus();
+        el.setSelectionRange(pos, pos);
+      });
+      closeMention();
+    };
+
+    const onTextareaChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
+      const next = e.target.value;
+      onValueChange(next);
+      const caret = e.target.selectionStart ?? next.length;
+      // Look back from the caret for the most recent '@' that starts a token.
+      const upto = next.slice(0, caret);
+      const m = upto.match(/(?:^|\s)@([\w-]{0,40})$/);
+      if (m) {
+        const query = m[1];
+        const anchorStart = caret - query.length - 1; // index of '@'
+        setMention((prev) => ({
+          ...prev,
+          open: true,
+          query,
+          anchorStart,
+        }));
+      } else if (mention.open) {
+        closeMention();
+      }
+    };
+
+    const onTextareaKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
+      if (!mention.open || mention.items.length === 0) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setMention((m) => ({ ...m, activeIndex: (m.activeIndex + 1) % m.items.length }));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setMention((m) => ({
+          ...m,
+          activeIndex: (m.activeIndex - 1 + m.items.length) % m.items.length,
+        }));
+      } else if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault();
+        selectReference(mention.items[mention.activeIndex]);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        closeMention();
+      }
+    };
+
+    const kindIcon = (k: ReferenceKind) => {
+      switch (k) {
+        case "prompt": return <FileText className="h-3.5 w-3.5" />;
+        case "note": return <StickyNote className="h-3.5 w-3.5" />;
+        case "conversation": return <MessageSquare className="h-3.5 w-3.5" />;
+        case "wiki": return <BookOpen className="h-3.5 w-3.5" />;
+      }
+    };
+    // ---------- end mention picker ----------
+
+
     const handleFiles = async (files: FileList | File[]) => {
       const images = Array.from(files).filter((f) => f.type.startsWith("image/"));
       if (images.length === 0) return;
