@@ -152,7 +152,7 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
             )}
           >
             {value.trim() ? (
-              <Markdown content={value} />
+              <Markdown>{value}</Markdown>
             ) : (
               <p className="text-muted-foreground italic">Nothing to preview yet.</p>
             )}
