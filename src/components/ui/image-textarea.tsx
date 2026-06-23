@@ -144,36 +144,94 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
 
     return (
       <div className="relative">
-        <Textarea
-          ref={innerRef}
-          value={value}
-          onChange={(e) => onValueChange(e.target.value)}
-          onPaste={onPaste}
-          onDrop={onDrop}
-          onDragOver={(e) => {
-            if (e.dataTransfer?.types?.includes("Files")) {
-              e.preventDefault();
-              setDragOver(true);
-            }
-          }}
-          onDragLeave={() => setDragOver(false)}
-          className={cn(dragOver && "ring-2 ring-primary ring-offset-2", className)}
-          {...rest}
-        />
+        {showPreview ? (
+          <div
+            className={cn(
+              "min-h-[8rem] rounded-md border border-input bg-background px-3 py-2 text-sm",
+              className,
+            )}
+          >
+            {value.trim() ? (
+              <Markdown content={value} />
+            ) : (
+              <p className="text-muted-foreground italic">Nothing to preview yet.</p>
+            )}
+          </div>
+        ) : (
+          <Textarea
+            ref={innerRef}
+            value={value}
+            onChange={(e) => onValueChange(e.target.value)}
+            onPaste={onPaste}
+            onDrop={onDrop}
+            onDragOver={(e) => {
+              if (e.dataTransfer?.types?.includes("Files")) {
+                e.preventDefault();
+                setDragOver(true);
+              }
+            }}
+            onDragLeave={() => setDragOver(false)}
+            className={cn(dragOver && "ring-2 ring-primary ring-offset-2", className)}
+            {...rest}
+          />
+        )}
+
+        {!showPreview && images.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {images.map((img, i) => (
+              <div
+                key={`${img.url.slice(0, 32)}-${i}`}
+                className="group relative h-16 w-16 overflow-hidden rounded-md border border-border bg-muted"
+                title={img.alt || "image"}
+              >
+                <img
+                  src={img.url}
+                  alt={img.alt}
+                  className="h-full w-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeImage(img.match)}
+                  className="absolute right-0.5 top-0.5 rounded-full bg-background/90 p-0.5 text-foreground opacity-0 shadow transition group-hover:opacity-100"
+                  aria-label="Remove image"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
         {toolbar && (
           <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-            <span>Paste or drop images · Markdown</span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-7 gap-1.5"
-              disabled={busy}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImagePlus className="h-3 w-3" />}
-              {busy ? "Adding…" : "Add image"}
-            </Button>
+            <span>
+              {showPreview
+                ? "Preview"
+                : `Paste or drop images · Markdown${images.length ? ` · ${images.length} image${images.length === 1 ? "" : "s"}` : ""}`}
+            </span>
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1.5"
+                onClick={() => setShowPreview((v) => !v)}
+              >
+                {showPreview ? <Pencil className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                {showPreview ? "Edit" : "Preview"}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1.5"
+                disabled={busy || showPreview}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImagePlus className="h-3 w-3" />}
+                {busy ? "Adding…" : "Add image"}
+              </Button>
+            </div>
           </div>
         )}
         <input
