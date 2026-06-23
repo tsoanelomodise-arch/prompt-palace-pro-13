@@ -364,6 +364,40 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
                 variant="ghost"
                 size="sm"
                 className="h-7 gap-1.5"
+                disabled={showPreview}
+                onClick={() => {
+                  const el = innerRef.current;
+                  if (!el) return;
+                  el.focus();
+                  const caret = el.selectionStart ?? value.length;
+                  const before = value.slice(0, caret);
+                  const after = value.slice(caret);
+                  const needsSpace = before.length > 0 && !/\s$/.test(before);
+                  const insert = (needsSpace ? " " : "") + "@";
+                  onValueChange(before + insert + after);
+                  const newCaret = caret + insert.length;
+                  requestAnimationFrame(() => {
+                    el.focus();
+                    el.setSelectionRange(newCaret, newCaret);
+                    setMention({
+                      open: true,
+                      query: "",
+                      anchorStart: newCaret - 1,
+                      items: [],
+                      loading: true,
+                      activeIndex: 0,
+                    });
+                  });
+                }}
+              >
+                <AtSign className="h-3 w-3" />
+                Reference
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1.5"
                 onClick={() => setShowPreview((v) => !v)}
               >
                 {showPreview ? <Pencil className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
