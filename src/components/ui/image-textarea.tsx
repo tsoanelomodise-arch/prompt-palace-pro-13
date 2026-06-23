@@ -273,7 +273,9 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
           <Textarea
             ref={innerRef}
             value={value}
-            onChange={(e) => onValueChange(e.target.value)}
+            onChange={onTextareaChange}
+            onKeyDown={onTextareaKeyDown}
+            onBlur={() => setTimeout(closeMention, 150)}
             onPaste={onPaste}
             onDrop={onDrop}
             onDragOver={(e) => {
@@ -287,6 +289,41 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
             {...rest}
           />
         )}
+
+        {!showPreview && mention.open && (
+          <div className="absolute left-2 top-full z-50 mt-1 w-80 max-w-[calc(100%-1rem)] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-lg">
+            <div className="border-b border-border px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+              {mention.loading ? "Searching…" : mention.items.length > 0 ? `Reference @${mention.query}` : "No matches"}
+            </div>
+            <ul className="max-h-64 overflow-y-auto py-1">
+              {mention.items.map((item, i) => (
+                <li key={`${item.kind}-${item.id}`}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      selectReference(item);
+                    }}
+                    onMouseEnter={() => setMention((m) => ({ ...m, activeIndex: i }))}
+                    className={cn(
+                      "flex w-full items-start gap-2 px-3 py-1.5 text-left text-sm",
+                      i === mention.activeIndex ? "bg-accent text-accent-foreground" : "hover:bg-accent/60",
+                    )}
+                  >
+                    <span className="mt-0.5 text-muted-foreground">{kindIcon(item.kind)}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{item.label}</span>
+                      {item.sublabel && (
+                        <span className="block truncate text-xs text-muted-foreground">{item.sublabel}</span>
+                      )}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
 
         {!showPreview && images.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
