@@ -1,65 +1,51 @@
-## Agency Wiki
+# Improve with AI in editors
 
-A lightweight internal wiki for know-how (SOPs, playbooks, research notes, onboarding docs) that can be linked to Clients, Projects, and Prompts.
+Add an AI-powered "Improve" action to the `ImageTextarea` component, available in all four editor surfaces (prompts, client notes, conversations, wiki pages).
 
-### Data model (one migration)
+## UX
 
-**`wiki_spaces`** — top-level grouping (e.g. "Agency SOPs", "Design System", "Onboarding")
-- `name`, `slug`, `description`, `icon`, `created_by`
+- New **Sparkles "Improve with AI"** button in the editor toolbar.
+- Clicking opens a small popover with:
+  - Two preset modes: **Polish & Clarify** (default) and **Custom instruction** (free-text field, e.g. "make it more technical").
+  - **Improve** submit button.
+- Operates on the whole document content.
+- While running: button shows spinner, editor is disabled.
+- On success: open a **diff preview dialog** showing original vs improved side-by-side, with word-level highlights (additions green, removals red).
+  - Buttons: **Accept** (replaces editor content), **Reject** (closes, keeps original), **Regenerate** (re-runs with same instruction).
+- On error: toast with message (rate limit 429, credits 402, generic).
 
-**`wiki_pages`** — the actual articles
-- `space_id` → wiki_spaces
-- `parent_id` → wiki_pages (self-ref, for nested tree)
-- `title`, `slug`, `content` (markdown text), `excerpt`
-- `status` (`draft` | `published`)
-- `created_by`, `updated_by`, `position` (int for sort)
+## Technical
 
-**`wiki_page_links`** — polymorphic many-to-many to attach a page to clients/projects/prompts
-- `page_id` → wiki_pages
-- `entity_type` (`client` | `project` | `prompt`)
-- `entity_id` (uuid)
-- unique(page_id, entity_type, entity_id)
+**Server function** — `src/lib/improve.functions.ts`
+- `improveContent` createServerFn (POST), auth-protected via `requireSupabaseAuth`.
+- Input: `{ content: string, mode: 'polish' | 'custom', instruction?: string }` validated with Zod.
+- Calls Lovable AI Gateway (`google/gemini-3-flash-preview`) via `@ai-sdk/openai-compatible` + `generateText` from `ai`.
+- System prompt instructs the model to:
+  - Preserve markdown structure, image tokens `![](...)`, and reference links `[Title](url)`.
+  - For "polish": fix grammar, improve clarity/tone, no meaning changes, no length inflation.
+  - For "custom": follow the user instruction strictly while preserving structure.
+  - Return only the improved markdown (no preamble/code fences).
+- Reads `LOVABLE_API_KEY` from `process.env` inside handler. Provisions via `ai_gateway--create` if missing.
 
-**`wiki_page_revisions`** — simple version history
-- `page_id`, `title`, `content`, `edited_by`, `created_at`
-- written by a trigger on `wiki_pages` UPDATE
+**AI gateway helper** — `src/lib/ai-gateway.server.ts` (new, per `ai-sdk-lovable-gateway` knowledge): `createLovableAiGatewayProvider` factory.
 
-RLS: any signed-in user can read; only `admin` or the page's `created_by` can edit/delete. Spaces admin-only to create. All tables get GRANTs + `updated_at` trigger.
+**Diff component** — `src/components/ui/diff-view.tsx`
+- Simple word-diff using a small inline LCS implementation (no new dep) rendering two columns.
 
-### Server functions (`src/lib/wiki.functions.ts`)
-- `listSpaces`, `createSpace` (admin), `updateSpace`, `deleteSpace` (admin)
-- `listPages({ spaceId, parentId? })`, `getPage(id)`, `searchPages(q)` (ILIKE on title+content)
-- `createPage`, `updatePage` (writes revision via trigger), `deletePage`
-- `listPageLinks(pageId)`, `attachPageLink({pageId, entityType, entityId})`, `detachPageLink`
-- `listLinkedPages({entityType, entityId})` — used on client/project/prompt detail tabs
+**Editor integration** — `src/components/ui/image-textarea.tsx`
+- Add Sparkles toolbar button + popover (shadcn `Popover`).
+- Add diff `Dialog` for review.
+- State: `improving`, `improveOpen`, `mode`, `instruction`, `diffOpen`, `improvedText`.
+- Call server fn via `useServerFn`.
+- All four editors already use `ImageTextarea`, so no changes needed in route files.
 
-### UI / routes (under `_authenticated`)
+## Files
 
-```
-/wiki                              -> space list + recent pages + search bar
-/wiki/$spaceSlug                   -> sidebar tree of pages + welcome
-/wiki/$spaceSlug/$pageSlug         -> page view (rendered markdown)
-/wiki/$spaceSlug/$pageSlug/edit    -> editor (markdown textarea + preview, link picker)
-/wiki/new                          -> quick create (pick space + parent)
-```
+- New: `src/lib/ai-gateway.server.ts`
+- New: `src/lib/improve.functions.ts`
+- New: `src/components/ui/diff-view.tsx`
+- Edit: `src/components/ui/image-textarea.tsx` (toolbar button, popover, diff dialog wiring)
 
-Components:
-- `WikiSidebar` — collapsible nested tree per space
-- `WikiPageView` — rendered markdown (`react-markdown` + `remark-gfm`), breadcrumbs, "linked to" chips, last-edited meta, Edit button
-- `WikiPageEditor` — title, markdown textarea, status toggle, parent picker, **Links** panel (search Clients / Projects / Prompts → attach)
-- `WikiSearch` — command-palette-style search across pages
-- `LinkedWikiPages` — small list component embedded on Client, Project, and Prompt detail pages ("Related know-how" section) with an "Attach page" picker
+## Out of scope
 
-Nav: add **Wiki** to the existing sticky header next to Clients · Prompts · Team.
-
-### Out of scope (call out)
-- Rich-text/WYSIWYG editor (markdown only)
-- Comments, mentions, real-time collab
-- File/image uploads inside pages (links only)
-- Per-space ACLs (everyone can read all spaces)
-- Full-text ranking — simple ILIKE search only
-
-### Open questions before building
-1. OK with **markdown-only** editing (no WYSIWYG)?
-2. **Edit permissions** — admin + original author only, or any signed-in member can edit any page?
-3. Do you want a **public-facing** option (publish a page to a public URL for clients), or strictly internal?
+- Selection-only improvement, expand/shorten presets, streaming progress, history of past improvements.
