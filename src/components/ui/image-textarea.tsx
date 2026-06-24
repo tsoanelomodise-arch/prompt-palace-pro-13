@@ -447,6 +447,67 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
                 <AtSign className="h-3 w-3" />
                 Reference
               </Button>
+              <Popover open={improvePopoverOpen} onOpenChange={setImprovePopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1.5"
+                    disabled={improving || showPreview}
+                  >
+                    {improving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    {improving ? "Improving…" : "Improve with AI"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-80">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm font-medium">Improve with AI</p>
+                      <p className="text-xs text-muted-foreground">Generates a revised version. You'll review a diff before anything changes.</p>
+                    </div>
+                    <div className="flex gap-1.5">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={improveMode === "polish" ? "default" : "outline"}
+                        className="h-7 flex-1"
+                        onClick={() => setImproveMode("polish")}
+                      >
+                        Polish & Clarify
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={improveMode === "custom" ? "default" : "outline"}
+                        className="h-7 flex-1"
+                        onClick={() => setImproveMode("custom")}
+                      >
+                        Custom
+                      </Button>
+                    </div>
+                    {improveMode === "custom" && (
+                      <PlainTextarea
+                        value={improveInstruction}
+                        onChange={(e) => setImproveInstruction(e.target.value)}
+                        placeholder="e.g. Make it more technical and add bullet points"
+                        rows={3}
+                        className="text-sm"
+                      />
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="w-full"
+                      disabled={improving}
+                      onClick={doImprove}
+                    >
+                      {improving ? <Loader2 className="mr-1.5 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1.5 h-3 w-3" />}
+                      Improve
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <Button
                 type="button"
                 variant="ghost"
