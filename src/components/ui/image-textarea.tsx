@@ -1,12 +1,17 @@
 import { forwardRef, useRef, useImperativeHandle, useState, useMemo, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ImagePlus, Loader2, Eye, Pencil, X, AtSign, FileText, StickyNote, MessageSquare, BookOpen } from "lucide-react";
+import { ImagePlus, Loader2, Eye, Pencil, X, AtSign, FileText, StickyNote, MessageSquare, BookOpen, Sparkles, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Markdown } from "@/components/ui/markdown";
 import { useServerFn } from "@tanstack/react-start";
 import { searchReferences, type ReferenceItem, type ReferenceKind } from "@/lib/references.functions";
+import { improveContent } from "@/lib/improve.functions";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Textarea as PlainTextarea } from "@/components/ui/textarea";
+import { DiffView } from "@/components/ui/diff-view";
 
 const MAX_DIMENSION = 1600;
 const JPEG_QUALITY = 0.82;
@@ -209,6 +214,55 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
     };
     // ---------- end mention picker ----------
 
+    // ---------- Improve with AI ----------
+    const runImprove = useServerFn(improveContent);
+    const [improvePopoverOpen, setImprovePopoverOpen] = useState(false);
+    const [improveMode, setImproveMode] = useState<"polish" | "custom">("polish");
+    const [improveInstruction, setImproveInstruction] = useState("");
+    const [improving, setImproving] = useState(false);
+    const [diffOpen, setDiffOpen] = useState(false);
+    const [improvedText, setImprovedText] = useState("");
+    const [originalSnapshot, setOriginalSnapshot] = useState("");
+
+    const doImprove = async () => {
+      const content = value.trim();
+      if (!content) {
+        toast.error("Nothing to improve yet.");
+        return;
+      }
+      if (improveMode === "custom" && !improveInstruction.trim()) {
+        toast.error("Add an instruction or switch to Polish & Clarify.");
+        return;
+      }
+      setImproving(true);
+      try {
+        const { improved } = await runImprove({
+          data: {
+            content: value,
+            mode: improveMode,
+            instruction: improveMode === "custom" ? improveInstruction.trim() : undefined,
+          },
+        });
+        setOriginalSnapshot(value);
+        setImprovedText(improved);
+        setImprovePopoverOpen(false);
+        setDiffOpen(true);
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Improve failed");
+      } finally {
+        setImproving(false);
+      }
+    };
+
+    const acceptImproved = () => {
+      onValueChange(improvedText);
+      setDiffOpen(false);
+      toast.success("Improved version applied");
+    };
+    // ---------- end Improve with AI ----------
+
+
+
 
     const handleFiles = async (files: FileList | File[]) => {
       const images = Array.from(files).filter((f) => f.type.startsWith("image/"));
@@ -393,6 +447,67 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
                 <AtSign className="h-3 w-3" />
                 Reference
               </Button>
+              <Popover open={improvePopoverOpen} onOpenChange={setImprovePopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1.5"
+                    disabled={improving || showPreview}
+                  >
+                    {improving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    {improving ? "Improving…" : "Improve with AI"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-80">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm font-medium">Improve with AI</p>
+                      <p className="text-xs text-muted-foreground">Generates a revised version. You'll review a diff before anything changes.</p>
+                    </div>
+                    <div className="flex gap-1.5">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={improveMode === "polish" ? "default" : "outline"}
+                        className="h-7 flex-1"
+                        onClick={() => setImproveMode("polish")}
+                      >
+                        Polish & Clarify
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={improveMode === "custom" ? "default" : "outline"}
+                        className="h-7 flex-1"
+                        onClick={() => setImproveMode("custom")}
+                      >
+                        Custom
+                      </Button>
+                    </div>
+                    {improveMode === "custom" && (
+                      <PlainTextarea
+                        value={improveInstruction}
+                        onChange={(e) => setImproveInstruction(e.target.value)}
+                        placeholder="e.g. Make it more technical and add bullet points"
+                        rows={3}
+                        className="text-sm"
+                      />
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="w-full"
+                      disabled={improving}
+                      onClick={doImprove}
+                    >
+                      {improving ? <Loader2 className="mr-1.5 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1.5 h-3 w-3" />}
+                      Improve
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <Button
                 type="button"
                 variant="ghost"
@@ -428,6 +543,51 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
             e.target.value = "";
           }}
         />
+
+        <Dialog open={diffOpen} onOpenChange={setDiffOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Review AI improvements</DialogTitle>
+              <DialogDescription>
+                Additions are highlighted in green, removals in red. Accept to apply the new version.
+              </DialogDescription>
+            </DialogHeader>
+            <DiffView original={originalSnapshot} improved={improvedText} />
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button type="button" variant="ghost" onClick={() => setDiffOpen(false)}>
+                Reject
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={improving}
+                onClick={async () => {
+                  setImproving(true);
+                  try {
+                    const { improved } = await runImprove({
+                      data: {
+                        content: originalSnapshot,
+                        mode: improveMode,
+                        instruction: improveMode === "custom" ? improveInstruction.trim() : undefined,
+                      },
+                    });
+                    setImprovedText(improved);
+                  } catch (e) {
+                    toast.error(e instanceof Error ? e.message : "Improve failed");
+                  } finally {
+                    setImproving(false);
+                  }
+                }}
+              >
+                {improving ? <Loader2 className="mr-1.5 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1.5 h-3 w-3" />}
+                Regenerate
+              </Button>
+              <Button type="button" onClick={acceptImproved}>
+                Accept
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   },
