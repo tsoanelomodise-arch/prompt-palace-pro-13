@@ -543,6 +543,51 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
             e.target.value = "";
           }}
         />
+
+        <Dialog open={diffOpen} onOpenChange={setDiffOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Review AI improvements</DialogTitle>
+              <DialogDescription>
+                Additions are highlighted in green, removals in red. Accept to apply the new version.
+              </DialogDescription>
+            </DialogHeader>
+            <DiffView original={originalSnapshot} improved={improvedText} />
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button type="button" variant="ghost" onClick={() => setDiffOpen(false)}>
+                Reject
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={improving}
+                onClick={async () => {
+                  setImproving(true);
+                  try {
+                    const { improved } = await runImprove({
+                      data: {
+                        content: originalSnapshot,
+                        mode: improveMode,
+                        instruction: improveMode === "custom" ? improveInstruction.trim() : undefined,
+                      },
+                    });
+                    setImprovedText(improved);
+                  } catch (e) {
+                    toast.error(e instanceof Error ? e.message : "Improve failed");
+                  } finally {
+                    setImproving(false);
+                  }
+                }}
+              >
+                {improving ? <Loader2 className="mr-1.5 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1.5 h-3 w-3" />}
+                Regenerate
+              </Button>
+              <Button type="button" onClick={acceptImproved}>
+                Accept
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   },
