@@ -214,6 +214,55 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
     };
     // ---------- end mention picker ----------
 
+    // ---------- Improve with AI ----------
+    const runImprove = useServerFn(improveContent);
+    const [improvePopoverOpen, setImprovePopoverOpen] = useState(false);
+    const [improveMode, setImproveMode] = useState<"polish" | "custom">("polish");
+    const [improveInstruction, setImproveInstruction] = useState("");
+    const [improving, setImproving] = useState(false);
+    const [diffOpen, setDiffOpen] = useState(false);
+    const [improvedText, setImprovedText] = useState("");
+    const [originalSnapshot, setOriginalSnapshot] = useState("");
+
+    const doImprove = async () => {
+      const content = value.trim();
+      if (!content) {
+        toast.error("Nothing to improve yet.");
+        return;
+      }
+      if (improveMode === "custom" && !improveInstruction.trim()) {
+        toast.error("Add an instruction or switch to Polish & Clarify.");
+        return;
+      }
+      setImproving(true);
+      try {
+        const { improved } = await runImprove({
+          data: {
+            content: value,
+            mode: improveMode,
+            instruction: improveMode === "custom" ? improveInstruction.trim() : undefined,
+          },
+        });
+        setOriginalSnapshot(value);
+        setImprovedText(improved);
+        setImprovePopoverOpen(false);
+        setDiffOpen(true);
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Improve failed");
+      } finally {
+        setImproving(false);
+      }
+    };
+
+    const acceptImproved = () => {
+      onValueChange(improvedText);
+      setDiffOpen(false);
+      toast.success("Improved version applied");
+    };
+    // ---------- end Improve with AI ----------
+
+
+
 
     const handleFiles = async (files: FileList | File[]) => {
       const images = Array.from(files).filter((f) => f.type.startsWith("image/"));
