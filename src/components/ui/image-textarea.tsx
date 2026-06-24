@@ -1,12 +1,17 @@
 import { forwardRef, useRef, useImperativeHandle, useState, useMemo, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ImagePlus, Loader2, Eye, Pencil, X, AtSign, FileText, StickyNote, MessageSquare, BookOpen } from "lucide-react";
+import { ImagePlus, Loader2, Eye, Pencil, X, AtSign, FileText, StickyNote, MessageSquare, BookOpen, Sparkles, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Markdown } from "@/components/ui/markdown";
 import { useServerFn } from "@tanstack/react-start";
 import { searchReferences, type ReferenceItem, type ReferenceKind } from "@/lib/references.functions";
+import { improveContent } from "@/lib/improve.functions";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Textarea as PlainTextarea } from "@/components/ui/textarea";
+import { DiffView } from "@/components/ui/diff-view";
 
 const MAX_DIMENSION = 1600;
 const JPEG_QUALITY = 0.82;
