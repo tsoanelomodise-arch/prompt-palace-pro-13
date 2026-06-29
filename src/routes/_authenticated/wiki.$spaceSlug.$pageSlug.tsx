@@ -56,6 +56,55 @@ function PageView() {
 
   const canEdit = isAdmin || data.created_by === user?.id;
 
+  const [duplicating, setDuplicating] = useState(false);
+
+  const duplicate = async () => {
+    setDuplicating(true);
+    try {
+      const baseTitle = `${data.title} (copy)`;
+      const baseSlug = slugify(baseTitle);
+      const { data: existing, error: e1 } = await supabase
+        .from("wiki_pages")
+        .select("slug")
+        .eq("space_id", data.space_id)
+        .like("slug", `${baseSlug}%`);
+      if (e1) throw e1;
+      const taken = new Set((existing ?? []).map((r) => r.slug));
+      let slug = baseSlug;
+      let n = 2;
+      while (taken.has(slug)) slug = `${baseSlug}-${n++}`;
+      let title = baseTitle;
+      if (n > 2) title = `${data.title} (copy ${n - 1})`;
+      const { data: created, error: e2 } = await supabase
+        .from("wiki_pages")
+        .insert({
+          space_id: data.space_id,
+          parent_id: data.parent_id,
+          title,
+          slug,
+          content: data.content,
+          excerpt: data.excerpt,
+          status: "draft",
+          created_by: user?.id,
+          updated_by: user?.id,
+        })
+        .select("slug")
+        .single();
+      if (e2) throw e2;
+      toast.success("Duplicated");
+      qc.invalidateQueries({ queryKey: ["wiki-space-pages"] });
+      qc.invalidateQueries({ queryKey: ["wiki-recent"] });
+      router.navigate({
+        to: "/wiki/$spaceSlug/$pageSlug/edit",
+        params: { spaceSlug, pageSlug: created.slug },
+      });
+    } catch (err: any) {
+      toast.error(err.message ?? "Failed to duplicate");
+    } finally {
+      setDuplicating(false);
+    }
+  };
+
   const del = async () => {
     const { error } = await supabase.from("wiki_pages").delete().eq("id", data.id);
     if (error) return toast.error(error.message);
