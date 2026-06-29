@@ -142,6 +142,15 @@ function PageView() {
             >
               <Pencil className="h-3.5 w-3.5" /> Edit
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={duplicate}
+              disabled={duplicating}
+              className="gap-1.5"
+            >
+              <Copy className="h-3.5 w-3.5" /> {duplicating ? "Duplicating…" : "Duplicate"}
+            </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button size="sm" variant="ghost" className="text-destructive">
