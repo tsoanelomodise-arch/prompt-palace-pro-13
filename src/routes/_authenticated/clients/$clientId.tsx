@@ -456,6 +456,16 @@ function CredentialRow({ cred, clientId, isAdmin }: { cred: { id: string; label:
   const qc = useQueryClient();
   const [revealed, setRevealed] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [edit, setEdit] = useState({
+    label: cred.label,
+    system: cred.system ?? "",
+    url: cred.url ?? "",
+    username: cred.username ?? "",
+    password: "",
+    notes: cred.notes ?? "",
+  });
 
   const reveal = async () => {
     if (revealed) { setRevealed(null); return; }
@@ -488,6 +498,61 @@ function CredentialRow({ cred, clientId, isAdmin }: { cred: { id: string; label:
     toast.success("Login removed");
   };
 
+  const startEdit = () => {
+    setEdit({
+      label: cred.label,
+      system: cred.system ?? "",
+      url: cred.url ?? "",
+      username: cred.username ?? "",
+      password: "",
+      notes: cred.notes ?? "",
+    });
+    setEditing(true);
+  };
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!edit.label.trim()) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("credentials")
+      .update({
+        label: edit.label.trim(),
+        system: edit.system.trim() || null,
+        url: edit.url.trim() || null,
+        username: edit.username.trim() || null,
+        notes: edit.notes.trim() || null,
+      })
+      .eq("id", cred.id);
+    if (error) { setSaving(false); return toast.error(error.message); }
+    if (edit.password) {
+      const { error: e2 } = await supabase.rpc("credential_set_secret", { _id: cred.id, _plain: edit.password });
+      if (e2) { setSaving(false); return toast.error(`Saved metadata but could not update password: ${e2.message}`); }
+      setRevealed(null);
+    }
+    setSaving(false);
+    setEditing(false);
+    qc.invalidateQueries({ queryKey: ["credentials", clientId] });
+    toast.success("Login updated");
+  };
+
+  if (editing && isAdmin) {
+    return (
+      <form onSubmit={save} className="border border-border rounded-lg bg-card p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div><Label className="text-xs">Label *</Label><Input value={edit.label} onChange={(e) => setEdit({ ...edit, label: e.target.value })} className="h-10 mt-1" autoFocus /></div>
+        <div><Label className="text-xs">System</Label><Input value={edit.system} onChange={(e) => setEdit({ ...edit, system: e.target.value })} className="h-10 mt-1" /></div>
+        <div className="sm:col-span-2"><Label className="text-xs">URL</Label><Input value={edit.url} onChange={(e) => setEdit({ ...edit, url: e.target.value })} className="h-10 mt-1" /></div>
+        <div><Label className="text-xs">Username</Label><Input value={edit.username} onChange={(e) => setEdit({ ...edit, username: e.target.value })} className="h-10 mt-1" autoComplete="off" /></div>
+        <div><Label className="text-xs">Password <span className="text-muted-foreground font-normal">(leave blank to keep)</span></Label><Input type="password" value={edit.password} onChange={(e) => setEdit({ ...edit, password: e.target.value })} className="h-10 mt-1 font-mono" autoComplete="new-password" placeholder="••••••••••" /></div>
+        <div className="sm:col-span-2"><Label className="text-xs">Notes</Label><Textarea value={edit.notes} onChange={(e) => setEdit({ ...edit, notes: e.target.value })} className="mt-1 min-h-[80px]" /></div>
+        <div className="sm:col-span-2 flex gap-2">
+          <Button type="submit" size="sm" disabled={saving}>{saving ? "Saving…" : "Save changes"}</Button>
+          <Button type="button" size="sm" variant="ghost" onClick={() => setEditing(false)} disabled={saving}>Cancel</Button>
+        </div>
+      </form>
+    );
+  }
+
   return (
     <div className="border border-border rounded-lg bg-card p-4">
       <div className="flex items-start justify-between gap-3">
@@ -503,23 +568,28 @@ function CredentialRow({ cred, clientId, isAdmin }: { cred: { id: string; label:
           )}
         </div>
         {isAdmin && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive shrink-0">
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete this login?</AlertDialogTitle>
-                <AlertDialogDescription>The encrypted password will be lost.</AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={del} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <div className="flex items-center gap-1 shrink-0">
+            <Button variant="ghost" size="icon" onClick={startEdit} title="Edit">
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete this login?</AlertDialogTitle>
+                  <AlertDialogDescription>The encrypted password will be lost.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={del} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         )}
       </div>
 
