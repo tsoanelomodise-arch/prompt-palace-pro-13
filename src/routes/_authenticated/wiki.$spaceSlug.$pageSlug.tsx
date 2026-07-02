@@ -25,6 +25,7 @@ function PageView() {
   const router = useRouter();
   const qc = useQueryClient();
   const { user, isAdmin } = useAuth();
+  const [duplicating, setDuplicating] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["wiki-page", spaceSlug, pageSlug],
@@ -56,7 +57,7 @@ function PageView() {
 
   const canEdit = isAdmin || data.created_by === user?.id;
 
-  const [duplicating, setDuplicating] = useState(false);
+
 
   const duplicate = async () => {
     setDuplicating(true);
