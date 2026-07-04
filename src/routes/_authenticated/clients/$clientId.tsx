@@ -21,7 +21,6 @@ import {
   MessageSquare, PhoneCall, Users, MessageCircle, CalendarClock, Repeat,
 } from "lucide-react";
 import { REPEAT_INTERVALS, repeatLabel, type RepeatInterval } from "@/lib/pipeline";
-// (closes lucide-react import block)
 import { formatDistanceToNow, format } from "date-fns";
 import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 
