@@ -297,6 +297,18 @@ function ProjectsPane({ clientId }: { clientId: string }) {
               <option value="lost">Lost</option>
             </select>
           </div>
+          <div>
+            <Label className="text-xs">Repeats</Label>
+            <select
+              value={repeatInterval}
+              onChange={(e) => setRepeatInterval(e.target.value as RepeatInterval)}
+              className="h-10 mt-1 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              {REPEAT_INTERVALS.map((r) => (
+                <option key={r.id} value={r.id}>{r.label}</option>
+              ))}
+            </select>
+          </div>
           <Button type="submit" size="sm">Save</Button>
           <Button type="button" size="sm" variant="ghost" onClick={() => setAdding(false)}>Cancel</Button>
         </form>
