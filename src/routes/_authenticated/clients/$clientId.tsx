@@ -238,9 +238,12 @@ function ProjectsPane({ clientId }: { clientId: string }) {
           <div>
             <Label className="text-xs">Status</Label>
             <select value={status} onChange={(e) => setStatus(e.target.value)} className="h-10 mt-1 rounded-md border border-input bg-background px-3 text-sm">
+              <option value="lead">Lead</option>
+              <option value="proposal">Proposal</option>
               <option value="active">Active</option>
-              <option value="paused">Paused</option>
-              <option value="done">Done</option>
+              <option value="review">Review</option>
+              <option value="delivered">Delivered</option>
+              <option value="lost">Lost</option>
             </select>
           </div>
           <Button type="submit" size="sm">Save</Button>

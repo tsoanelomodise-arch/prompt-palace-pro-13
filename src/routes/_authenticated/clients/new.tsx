@@ -18,7 +18,7 @@ const schema = z.object({
   name: z.string().trim().min(1, "Name is required").max(140),
   website: z.string().trim().max(200).optional(),
   industry: z.string().trim().max(80).optional(),
-  status: z.enum(["lead", "contacted", "proposal", "active", "won", "lost", "paused", "archived"]),
+  status: z.enum(["active", "paused", "archived"]),
   notes: z.string().trim().max(2000).optional(),
 });
 
@@ -29,7 +29,7 @@ function NewClient() {
     name: "",
     website: "",
     industry: "",
-    status: "lead" as "lead" | "contacted" | "proposal" | "active" | "won" | "lost" | "paused" | "archived",
+    status: "active" as const,
     notes: "",
   });
   const [saving, setSaving] = useState(false);
@@ -98,18 +98,9 @@ function NewClient() {
             onChange={(e) => setForm({ ...form, status: e.target.value as typeof form.status })}
             className="mt-1.5 h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <optgroup label="Pipeline">
-              <option value="lead">Lead</option>
-              <option value="contacted">Contacted</option>
-              <option value="proposal">Proposal</option>
-              <option value="active">Active</option>
-              <option value="won">Won</option>
-              <option value="lost">Lost</option>
-            </optgroup>
-            <optgroup label="Off pipeline">
-              <option value="paused">Paused</option>
-              <option value="archived">Archived</option>
-            </optgroup>
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+            <option value="archived">Archived</option>
           </select>
         </div>
         <div>
