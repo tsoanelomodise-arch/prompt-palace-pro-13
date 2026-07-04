@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedWikiRouteImport } from './routes/_authenticated/wiki'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
+import { Route as AuthenticatedPipelineRouteImport } from './routes/_authenticated/pipeline'
 import { Route as AuthenticatedNewRouteImport } from './routes/_authenticated/new'
 import { Route as AuthenticatedIdRouteImport } from './routes/_authenticated/$id'
 import { Route as AuthenticatedWikiIndexRouteImport } from './routes/_authenticated/wiki.index'
@@ -46,6 +47,11 @@ const AuthenticatedWikiRoute = AuthenticatedWikiRouteImport.update({
 const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
   id: '/team',
   path: '/team',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPipelineRoute = AuthenticatedPipelineRouteImport.update({
+  id: '/pipeline',
+  path: '/pipeline',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedNewRoute = AuthenticatedNewRouteImport.update({
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/$id': typeof AuthenticatedIdRoute
   '/new': typeof AuthenticatedNewRoute
+  '/pipeline': typeof AuthenticatedPipelineRoute
   '/team': typeof AuthenticatedTeamRoute
   '/wiki': typeof AuthenticatedWikiRouteWithChildren
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/$id': typeof AuthenticatedIdRoute
   '/new': typeof AuthenticatedNewRoute
+  '/pipeline': typeof AuthenticatedPipelineRoute
   '/team': typeof AuthenticatedTeamRoute
   '/': typeof AuthenticatedIndexRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_authenticated/$id': typeof AuthenticatedIdRoute
   '/_authenticated/new': typeof AuthenticatedNewRoute
+  '/_authenticated/pipeline': typeof AuthenticatedPipelineRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/wiki': typeof AuthenticatedWikiRouteWithChildren
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/$id'
     | '/new'
+    | '/pipeline'
     | '/team'
     | '/wiki'
     | '/clients/$clientId'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/$id'
     | '/new'
+    | '/pipeline'
     | '/team'
     | '/'
     | '/clients/$clientId'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_authenticated/$id'
     | '/_authenticated/new'
+    | '/_authenticated/pipeline'
     | '/_authenticated/team'
     | '/_authenticated/wiki'
     | '/_authenticated/'
@@ -233,6 +245,13 @@ declare module '@tanstack/react-router' {
       path: '/team'
       fullPath: '/team'
       preLoaderRoute: typeof AuthenticatedTeamRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/pipeline': {
+      id: '/_authenticated/pipeline'
+      path: '/pipeline'
+      fullPath: '/pipeline'
+      preLoaderRoute: typeof AuthenticatedPipelineRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/new': {
@@ -335,6 +354,7 @@ const AuthenticatedWikiRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedIdRoute: typeof AuthenticatedIdRoute
   AuthenticatedNewRoute: typeof AuthenticatedNewRoute
+  AuthenticatedPipelineRoute: typeof AuthenticatedPipelineRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedWikiRoute: typeof AuthenticatedWikiRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -346,6 +366,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIdRoute: AuthenticatedIdRoute,
   AuthenticatedNewRoute: AuthenticatedNewRoute,
+  AuthenticatedPipelineRoute: AuthenticatedPipelineRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedWikiRoute: AuthenticatedWikiRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
