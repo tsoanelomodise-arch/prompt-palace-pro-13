@@ -90,6 +90,26 @@ function PipelinePage() {
     if (error) {
       toast.error("Could not move project");
       qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
+      return;
+    }
+
+    // Auto-create the next occurrence when a repeating project is delivered
+    if (stage === "delivered" && current.repeat_interval && current.repeat_interval !== "none") {
+      const { error: cloneErr } = await supabase.from("projects").insert({
+        client_id: current.client_id,
+        name: current.name,
+        status: "lead",
+        notes: current.notes,
+        repeat_interval: current.repeat_interval,
+        created_by: user?.id ?? null,
+      });
+      if (cloneErr) {
+        toast.error(`Delivered, but could not queue next: ${cloneErr.message}`);
+      } else {
+        toast.success(`Delivered · queued next ${repeatLabel(current.repeat_interval).toLowerCase()} occurrence`);
+        qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
+        qc.invalidateQueries({ queryKey: ["projects", current.client_id] });
+      }
     }
   };
 
