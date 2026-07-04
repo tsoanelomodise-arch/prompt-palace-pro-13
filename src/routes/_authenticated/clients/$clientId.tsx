@@ -32,6 +32,7 @@ type Tab = "overview" | "projects" | "contacts" | "credentials" | "prompts" | "c
 function ClientDetail() {
   const { clientId } = Route.useParams();
   const router = useRouter();
+  const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("overview");
 
   const { data: client, isLoading } = useQuery({
@@ -42,6 +43,19 @@ function ClientDetail() {
       return data;
     },
   });
+
+  const updateStatus = async (next: string) => {
+    if (!client || client.status === next) return;
+    qc.setQueryData(["client", clientId], { ...client, status: next });
+    const { error } = await supabase.from("clients").update({ status: next }).eq("id", clientId);
+    if (error) {
+      toast.error("Could not update status");
+      qc.invalidateQueries({ queryKey: ["client", clientId] });
+    } else {
+      toast.success("Status updated");
+      qc.invalidateQueries({ queryKey: ["clients"] });
+    }
+  };
 
   if (isLoading || !client) {
     return <div className="mx-auto max-w-6xl px-6 py-10 text-sm text-muted-foreground">Loading…</div>;
@@ -66,7 +80,19 @@ function ClientDetail() {
             {client.name}
           </h1>
           <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-            <span className="px-2 py-0.5 rounded-full border border-border">{client.status}</span>
+            <select
+              value={client.status}
+              onChange={(e) => updateStatus(e.target.value)}
+              className="font-mono text-[11px] uppercase tracking-widest px-2 py-1 rounded-full border border-border bg-background hover:border-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
+              title="Change status"
+            >
+              <option value="active">active</option>
+              <option value="paused">paused</option>
+              <option value="archived">archived</option>
+              {!["active", "paused", "archived"].includes(client.status) && (
+                <option value={client.status}>{client.status}</option>
+              )}
+            </select>
             {client.website && (
               <a href={client.website.startsWith("http") ? client.website : `https://${client.website}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-foreground">
                 {client.website.replace(/^https?:\/\//, "")} <ExternalLink className="h-3 w-3" />
