@@ -2,8 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 import { PIPELINE_STAGES, type PipelineStage } from "@/lib/pipeline";
-import { GripVertical, Briefcase } from "lucide-react";
+import { GripVertical, Briefcase, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/pipeline")({
@@ -95,6 +103,7 @@ function PipelinePage() {
             Drag a project card between stages to update its status. Projects with legacy statuses appear below.
           </p>
         </div>
+        <NewProjectButton clients={clients} />
       </div>
 
       {isLoading ? (
@@ -213,5 +222,124 @@ function PipelinePage() {
         </>
       )}
     </div>
+  );
+}
+
+function NewProjectButton({ clients }: { clients: { id: string; name: string }[] }) {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [clientId, setClientId] = useState("");
+  const [name, setName] = useState("");
+  const [status, setStatus] = useState<PipelineStage>("lead");
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const reset = () => {
+    setClientId("");
+    setName("");
+    setStatus("lead");
+    setNotes("");
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    if (!clientId) {
+      toast.error("Pick a client");
+      return;
+    }
+    if (!name.trim()) {
+      toast.error("Project name is required");
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase.from("projects").insert({
+      client_id: clientId,
+      name: name.trim(),
+      status,
+      notes: notes.trim() || null,
+      created_by: user.id,
+    });
+    setSaving(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Project added");
+    qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
+    qc.invalidateQueries({ queryKey: ["projects"] });
+    reset();
+    setOpen(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
+      <DialogTrigger asChild>
+        <Button className="h-11 gap-1.5" disabled={clients.length === 0}>
+          <Plus className="h-4 w-4" /> New project
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-display">Add project</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={submit} className="space-y-4">
+          <div>
+            <Label htmlFor="np-client" className="text-xs">Client</Label>
+            <select
+              id="np-client"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              className="mt-1.5 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              required
+            >
+              <option value="">Select a client…</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <Label htmlFor="np-name" className="text-xs">Project name</Label>
+            <Input
+              id="np-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Website redesign"
+              className="mt-1.5 h-10"
+              autoFocus
+            />
+          </div>
+          <div>
+            <Label htmlFor="np-status" className="text-xs">Stage</Label>
+            <select
+              id="np-status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value as PipelineStage)}
+              className="mt-1.5 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              {PIPELINE_STAGES.map((s) => (
+                <option key={s.id} value={s.id}>{s.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <Label htmlFor="np-notes" className="text-xs">Notes (optional)</Label>
+            <Textarea
+              id="np-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="mt-1.5 min-h-[80px]"
+              placeholder="Scope, budget, key dates…"
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button type="submit" disabled={saving}>{saving ? "Saving…" : "Add project"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
