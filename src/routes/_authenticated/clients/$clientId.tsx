@@ -18,8 +18,9 @@ import { toast } from "sonner";
 import {
   ArrowLeft, ExternalLink, Plus, KeyRound, Eye, EyeOff, Copy, Trash2,
   Briefcase, User as UserIcon, FileText, StickyNote, Mail, Phone, Pencil, Save, X,
-  MessageSquare, PhoneCall, Users, MessageCircle, CalendarClock,
+  MessageSquare, PhoneCall, Users, MessageCircle, CalendarClock, Repeat,
 } from "lucide-react";
+import { REPEAT_INTERVALS, repeatLabel, type RepeatInterval } from "@/lib/pipeline";
 import { formatDistanceToNow, format } from "date-fns";
 import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 
@@ -227,6 +228,7 @@ function ProjectsPane({ clientId }: { clientId: string }) {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
   const [status, setStatus] = useState("active");
+  const [repeatInterval, setRepeatInterval] = useState<RepeatInterval>("none");
 
   const { data: projects = [] } = useQuery({
     queryKey: ["projects", clientId],
@@ -245,12 +247,27 @@ function ProjectsPane({ clientId }: { clientId: string }) {
     e.preventDefault();
     if (!user || !name.trim()) return;
     const { error } = await supabase.from("projects").insert({
-      client_id: clientId, name: name.trim(), status, created_by: user.id,
+      client_id: clientId,
+      name: name.trim(),
+      status,
+      repeat_interval: repeatInterval,
+      created_by: user.id,
     });
     if (error) return toast.error(error.message);
-    setName(""); setStatus("active"); setAdding(false);
+    setName(""); setStatus("active"); setRepeatInterval("none"); setAdding(false);
     qc.invalidateQueries({ queryKey: ["projects", clientId] });
+    qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
     toast.success("Project added");
+  };
+
+  const updateRepeat = async (projectId: string, value: RepeatInterval) => {
+    const { error } = await supabase
+      .from("projects")
+      .update({ repeat_interval: value })
+      .eq("id", projectId);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["projects", clientId] });
+    qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
   };
 
   return (
@@ -280,6 +297,18 @@ function ProjectsPane({ clientId }: { clientId: string }) {
               <option value="lost">Lost</option>
             </select>
           </div>
+          <div>
+            <Label className="text-xs">Repeats</Label>
+            <select
+              value={repeatInterval}
+              onChange={(e) => setRepeatInterval(e.target.value as RepeatInterval)}
+              className="h-10 mt-1 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              {REPEAT_INTERVALS.map((r) => (
+                <option key={r.id} value={r.id}>{r.label}</option>
+              ))}
+            </select>
+          </div>
           <Button type="submit" size="sm">Save</Button>
           <Button type="button" size="sm" variant="ghost" onClick={() => setAdding(false)}>Cancel</Button>
         </form>
@@ -296,6 +325,24 @@ function ProjectsPane({ clientId }: { clientId: string }) {
                   <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{p.status}</span>
                 </div>
                 {p.notes && <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{p.notes}</p>}
+              </div>
+              <div className="flex items-center gap-2">
+                <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Repeats</Label>
+                <select
+                  value={(p as any).repeat_interval ?? "none"}
+                  onChange={(e) => updateRepeat(p.id, e.target.value as RepeatInterval)}
+                  className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                  title={
+                    ((p as any).repeat_interval ?? "none") !== "none"
+                      ? `Auto-queues a new Lead when moved to Delivered · ${repeatLabel((p as any).repeat_interval)}`
+                      : "Set a cadence to auto-queue the next occurrence on delivery"
+                  }
+                >
+                  {REPEAT_INTERVALS.map((r) => (
+                    <option key={r.id} value={r.id}>{r.label}</option>
+                  ))}
+                </select>
               </div>
               <LinkedWikiPages entityType="project" entityId={p.id} />
             </div>

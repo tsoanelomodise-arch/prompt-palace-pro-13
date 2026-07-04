@@ -3,8 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { PIPELINE_STAGES, type PipelineStage } from "@/lib/pipeline";
-import { GripVertical, Briefcase, Plus } from "lucide-react";
+import { PIPELINE_STAGES, REPEAT_INTERVALS, repeatLabel, type PipelineStage, type RepeatInterval } from "@/lib/pipeline";
+import { GripVertical, Briefcase, Plus, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +25,7 @@ type ProjectRow = {
   notes: string | null;
   client_id: string;
   updated_at: string;
+  repeat_interval: string;
 };
 
 type ClientLite = { id: string; name: string };
@@ -32,6 +33,7 @@ type ClientLite = { id: string; name: string };
 function PipelinePage() {
   const qc = useQueryClient();
   const router = useRouter();
+  const { user } = useAuth();
   const [dragId, setDragId] = useState<string | null>(null);
   const [overStage, setOverStage] = useState<PipelineStage | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -41,7 +43,7 @@ function PipelinePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id,name,status,notes,client_id,updated_at")
+        .select("id,name,status,notes,client_id,updated_at,repeat_interval")
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return data as ProjectRow[];
@@ -88,6 +90,26 @@ function PipelinePage() {
     if (error) {
       toast.error("Could not move project");
       qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
+      return;
+    }
+
+    // Auto-create the next occurrence when a repeating project is delivered
+    if (stage === "delivered" && current.repeat_interval && current.repeat_interval !== "none") {
+      const { error: cloneErr } = await supabase.from("projects").insert({
+        client_id: current.client_id,
+        name: current.name,
+        status: "lead",
+        notes: current.notes,
+        repeat_interval: current.repeat_interval,
+        created_by: user?.id ?? null,
+      });
+      if (cloneErr) {
+        toast.error(`Delivered, but could not queue next: ${cloneErr.message}`);
+      } else {
+        toast.success(`Delivered · queued next ${repeatLabel(current.repeat_interval).toLowerCase()} occurrence`);
+        qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
+        qc.invalidateQueries({ queryKey: ["projects", current.client_id] });
+      }
     }
   };
 
@@ -190,6 +212,11 @@ function PipelinePage() {
                               >
                                 {clientName.get(p.client_id) ?? "—"}
                               </Link>
+                              {p.repeat_interval && p.repeat_interval !== "none" && (
+                                <div className="mt-1.5 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground border border-border rounded-full px-1.5 py-0.5">
+                                  <Repeat className="h-2.5 w-2.5" /> {repeatLabel(p.repeat_interval)}
+                                </div>
+                              )}
                               {p.notes && (
                                 <p className="mt-1.5 text-[11px] text-muted-foreground line-clamp-2">{p.notes}</p>
                               )}
@@ -256,6 +283,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
   const [name, setName] = useState("");
   const [status, setStatus] = useState<PipelineStage>("lead");
   const [notes, setNotes] = useState("");
+  const [repeatInterval, setRepeatInterval] = useState<RepeatInterval>("none");
   const [saving, setSaving] = useState(false);
 
   const reset = () => {
@@ -263,6 +291,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
     setName("");
     setStatus("lead");
     setNotes("");
+    setRepeatInterval("none");
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -282,6 +311,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
       name: name.trim(),
       status,
       notes: notes.trim() || null,
+      repeat_interval: repeatInterval,
       created_by: user.id,
     });
     setSaving(false);
@@ -346,6 +376,22 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
                 <option key={s.id} value={s.id}>{s.label}</option>
               ))}
             </select>
+          </div>
+          <div>
+            <Label htmlFor="np-repeat" className="text-xs">Repeats</Label>
+            <select
+              id="np-repeat"
+              value={repeatInterval}
+              onChange={(e) => setRepeatInterval(e.target.value as RepeatInterval)}
+              className="mt-1.5 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              {REPEAT_INTERVALS.map((r) => (
+                <option key={r.id} value={r.id}>{r.label}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Repeating projects auto-queue a fresh Lead when moved to Delivered.
+            </p>
           </div>
           <div>
             <Label htmlFor="np-notes" className="text-xs">Notes (optional)</Label>

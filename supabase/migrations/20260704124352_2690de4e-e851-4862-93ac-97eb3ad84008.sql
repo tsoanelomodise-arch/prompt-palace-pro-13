@@ -1,0 +1,2 @@
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS repeat_interval text NOT NULL DEFAULT 'none';
+ALTER TABLE public.projects ADD CONSTRAINT projects_repeat_interval_check CHECK (repeat_interval IN ('none','weekly','monthly','quarterly','yearly'));

@@ -11,3 +11,16 @@ export type PipelineStage = (typeof PIPELINE_STAGES)[number]["id"];
 
 export const isPipelineStage = (s: string): s is PipelineStage =>
   PIPELINE_STAGES.some((x) => x.id === s);
+
+export const REPEAT_INTERVALS = [
+  { id: "none", label: "Does not repeat" },
+  { id: "weekly", label: "Weekly" },
+  { id: "monthly", label: "Monthly" },
+  { id: "quarterly", label: "Quarterly" },
+  { id: "yearly", label: "Yearly" },
+] as const;
+
+export type RepeatInterval = (typeof REPEAT_INTERVALS)[number]["id"];
+
+export const repeatLabel = (r: string): string =>
+  REPEAT_INTERVALS.find((x) => x.id === r)?.label ?? "Does not repeat";

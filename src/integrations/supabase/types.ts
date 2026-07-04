@@ -290,6 +290,7 @@ export type Database = {
           id: string
           name: string
           notes: string | null
+          repeat_interval: string
           starts_on: string | null
           status: string
           updated_at: string
@@ -302,6 +303,7 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
+          repeat_interval?: string
           starts_on?: string | null
           status?: string
           updated_at?: string
@@ -314,6 +316,7 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
+          repeat_interval?: string
           starts_on?: string | null
           status?: string
           updated_at?: string
