@@ -326,6 +326,24 @@ function ProjectsPane({ clientId }: { clientId: string }) {
                 </div>
                 {p.notes && <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{p.notes}</p>}
               </div>
+              <div className="flex items-center gap-2">
+                <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Repeats</Label>
+                <select
+                  value={(p as any).repeat_interval ?? "none"}
+                  onChange={(e) => updateRepeat(p.id, e.target.value as RepeatInterval)}
+                  className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                  title={
+                    ((p as any).repeat_interval ?? "none") !== "none"
+                      ? `Auto-queues a new Lead when moved to Delivered · ${repeatLabel((p as any).repeat_interval)}`
+                      : "Set a cadence to auto-queue the next occurrence on delivery"
+                  }
+                >
+                  {REPEAT_INTERVALS.map((r) => (
+                    <option key={r.id} value={r.id}>{r.label}</option>
+                  ))}
+                </select>
+              </div>
               <LinkedWikiPages entityType="project" entityId={p.id} />
             </div>
           ))}
