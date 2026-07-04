@@ -38,6 +38,7 @@ function PipelinePage() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [overStage, setOverStage] = useState<PipelineStage | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["projects", "pipeline"],
