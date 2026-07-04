@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,14 @@ function ClientDetail() {
   const router = useRouter();
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("overview");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const h = window.location.hash.replace("#", "") as Tab;
+    if (["overview", "projects", "contacts", "credentials", "prompts", "conversations", "notes"].includes(h)) {
+      setTab(h);
+    }
+  }, []);
 
   const { data: client, isLoading } = useQuery({
     queryKey: ["client", clientId],

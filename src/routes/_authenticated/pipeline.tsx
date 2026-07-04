@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,8 +31,10 @@ type ClientLite = { id: string; name: string };
 
 function PipelinePage() {
   const qc = useQueryClient();
+  const router = useRouter();
   const [dragId, setDragId] = useState<string | null>(null);
   const [overStage, setOverStage] = useState<PipelineStage | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["projects", "pipeline"],
@@ -150,19 +152,40 @@ function PipelinePage() {
                         <div
                           key={p.id}
                           draggable
-                          onDragStart={() => setDragId(p.id)}
-                          onDragEnd={() => { setDragId(null); setOverStage(null); }}
-                          className={`group border border-border rounded-md p-3 bg-background hover:border-foreground/50 transition cursor-grab active:cursor-grabbing ${
+                          onDragStart={() => { setDragId(p.id); setDragging(true); }}
+                          onDragEnd={() => { setDragId(null); setOverStage(null); setTimeout(() => setDragging(false), 0); }}
+                          onClick={() => {
+                            if (dragging) return;
+                            router.navigate({
+                              to: "/clients/$clientId",
+                              params: { clientId: p.client_id },
+                              hash: "projects",
+                            });
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              router.navigate({
+                                to: "/clients/$clientId",
+                                params: { clientId: p.client_id },
+                                hash: "projects",
+                              });
+                            }
+                          }}
+                          className={`group border border-border rounded-md p-3 bg-background hover:border-foreground/50 transition cursor-pointer active:cursor-grabbing ${
                             dragId === p.id ? "opacity-40" : ""
                           }`}
                         >
                           <div className="flex items-start gap-2">
                             <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 mt-0.5 shrink-0" />
                             <div className="min-w-0 flex-1">
-                              <div className="font-display font-semibold text-sm truncate">{p.name}</div>
+                              <div className="font-display font-semibold text-sm truncate group-hover:underline underline-offset-4">{p.name}</div>
                               <Link
                                 to="/clients/$clientId"
                                 params={{ clientId: p.client_id }}
+                                onClick={(e) => e.stopPropagation()}
                                 className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground truncate block"
                               >
                                 {clientName.get(p.client_id) ?? "—"}
