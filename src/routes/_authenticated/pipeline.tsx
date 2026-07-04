@@ -118,6 +118,25 @@ function PipelinePage() {
     }
   };
 
+  const setArchived = async (projectId: string, archived: boolean) => {
+    qc.setQueryData<ProjectRow[]>(["projects", "pipeline"], (old) =>
+      (old ?? []).map((p) =>
+        p.id === projectId ? { ...p, archived_at: archived ? new Date().toISOString() : null } : p,
+      ),
+    );
+    const { error } = await supabase
+      .from("projects")
+      .update({ archived_at: archived ? new Date().toISOString() : null })
+      .eq("id", projectId);
+    if (error) {
+      toast.error(archived ? "Could not archive" : "Could not restore");
+      qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
+      return;
+    }
+    toast.success(archived ? "Archived" : "Restored");
+    qc.invalidateQueries({ queryKey: ["projects"] });
+  };
+
   return (
     <div className="mx-auto max-w-[1400px] px-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-6 mb-8 pb-8 border-b border-border">
