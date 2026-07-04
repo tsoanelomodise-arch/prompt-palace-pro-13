@@ -26,6 +26,7 @@ type ProjectRow = {
   client_id: string;
   updated_at: string;
   repeat_interval: string;
+  archived_at: string | null;
 };
 
 type ClientLite = { id: string; name: string };
