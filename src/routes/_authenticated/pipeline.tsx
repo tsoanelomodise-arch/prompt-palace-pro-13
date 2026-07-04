@@ -33,6 +33,7 @@ type ClientLite = { id: string; name: string };
 function PipelinePage() {
   const qc = useQueryClient();
   const router = useRouter();
+  const { user } = useAuth();
   const [dragId, setDragId] = useState<string | null>(null);
   const [overStage, setOverStage] = useState<PipelineStage | null>(null);
   const [dragging, setDragging] = useState(false);
