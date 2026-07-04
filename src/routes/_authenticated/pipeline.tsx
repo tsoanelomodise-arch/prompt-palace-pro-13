@@ -378,6 +378,22 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
             </select>
           </div>
           <div>
+            <Label htmlFor="np-repeat" className="text-xs">Repeats</Label>
+            <select
+              id="np-repeat"
+              value={repeatInterval}
+              onChange={(e) => setRepeatInterval(e.target.value as RepeatInterval)}
+              className="mt-1.5 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              {REPEAT_INTERVALS.map((r) => (
+                <option key={r.id} value={r.id}>{r.label}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Repeating projects auto-queue a fresh Lead when moved to Delivered.
+            </p>
+          </div>
+          <div>
             <Label htmlFor="np-notes" className="text-xs">Notes (optional)</Label>
             <Textarea
               id="np-notes"
