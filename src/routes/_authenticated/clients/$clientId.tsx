@@ -289,12 +289,15 @@ function ProjectsPane({ clientId }: { clientId: string }) {
       ) : (
         <div className="grid sm:grid-cols-2 gap-3">
           {projects.map((p) => (
-            <div key={p.id} className="border border-border rounded-lg p-4 bg-card hover:border-foreground/60 transition">
-              <div className="flex items-start justify-between gap-2">
-                <h4 className="font-display font-semibold">{p.name}</h4>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{p.status}</span>
+            <div key={p.id} className="border border-border rounded-lg p-4 bg-card hover:border-foreground/60 transition space-y-3">
+              <div>
+                <div className="flex items-start justify-between gap-2">
+                  <h4 className="font-display font-semibold">{p.name}</h4>
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{p.status}</span>
+                </div>
+                {p.notes && <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{p.notes}</p>}
               </div>
-              {p.notes && <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{p.notes}</p>}
+              <LinkedWikiPages entityType="project" entityId={p.id} />
             </div>
           ))}
         </div>
