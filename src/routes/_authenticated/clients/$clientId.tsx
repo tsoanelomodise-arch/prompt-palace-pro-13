@@ -18,8 +18,10 @@ import { toast } from "sonner";
 import {
   ArrowLeft, ExternalLink, Plus, KeyRound, Eye, EyeOff, Copy, Trash2,
   Briefcase, User as UserIcon, FileText, StickyNote, Mail, Phone, Pencil, Save, X,
-  MessageSquare, PhoneCall, Users, MessageCircle, CalendarClock,
+  MessageSquare, PhoneCall, Users, MessageCircle, CalendarClock, Repeat,
 } from "lucide-react";
+import { REPEAT_INTERVALS, repeatLabel, type RepeatInterval } from "@/lib/pipeline";
+// (closes lucide-react import block)
 import { formatDistanceToNow, format } from "date-fns";
 import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 
