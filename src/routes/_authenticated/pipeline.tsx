@@ -67,18 +67,21 @@ function PipelinePage() {
     return m;
   }, [clients]);
 
+  const activeProjects = useMemo(() => projects.filter((p) => !p.archived_at), [projects]);
+  const archivedProjects = useMemo(() => projects.filter((p) => !!p.archived_at), [projects]);
+
   const grouped = useMemo(() => {
     const map: Record<PipelineStage, ProjectRow[]> = {
       lead: [], proposal: [], active: [], review: [], delivered: [], lost: [],
     };
-    for (const p of projects) {
+    for (const p of activeProjects) {
       if (p.status in map) map[p.status as PipelineStage].push(p);
     }
     return map;
-  }, [projects]);
+  }, [activeProjects]);
 
   const validStages = new Set<string>(PIPELINE_STAGES.map((s) => s.id));
-  const offPipeline = projects.filter((p) => !validStages.has(p.status));
+  const offPipeline = activeProjects.filter((p) => !validStages.has(p.status));
 
   const move = async (projectId: string, stage: PipelineStage) => {
     const current = projects.find((p) => p.id === projectId);
