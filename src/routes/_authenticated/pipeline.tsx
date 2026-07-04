@@ -142,7 +142,7 @@ function PipelinePage() {
       <div className="flex flex-wrap items-end justify-between gap-6 mb-8 pb-8 border-b border-border">
         <div>
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            {projects.length} projects · {offPipeline.length} off pipeline
+            {activeProjects.length} active · {archivedProjects.length} archived · {offPipeline.length} off pipeline
           </p>
           <h1 className="mt-3 font-display text-5xl md:text-6xl font-semibold leading-[0.95] tracking-tight">
             Pipeline.
