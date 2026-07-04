@@ -245,6 +245,15 @@ function PipelinePage() {
                                 <p className="mt-1.5 text-[11px] text-muted-foreground line-clamp-2">{p.notes}</p>
                               )}
                             </div>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setArchived(p.id, true); }}
+                              className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-foreground shrink-0"
+                              title="Archive"
+                              aria-label="Archive project"
+                            >
+                              <Archive className="h-3.5 w-3.5" />
+                            </button>
                           </div>
                         </div>
                       ))
