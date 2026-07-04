@@ -311,6 +311,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
       name: name.trim(),
       status,
       notes: notes.trim() || null,
+      repeat_interval: repeatInterval,
       created_by: user.id,
     });
     setSaving(false);
