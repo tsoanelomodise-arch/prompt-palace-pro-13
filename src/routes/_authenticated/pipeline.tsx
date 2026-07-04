@@ -295,6 +295,58 @@ function PipelinePage() {
             </div>
           )}
 
+          {archivedProjects.length > 0 && (
+            <div className="mt-10">
+              <button
+                type="button"
+                onClick={() => setShowArchived((v) => !v)}
+                className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground mb-3"
+              >
+                {showArchived ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                <Archive className="h-3 w-3" /> Archived · {archivedProjects.length}
+              </button>
+              {showArchived && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {archivedProjects.map((p) => (
+                    <div
+                      key={p.id}
+                      className="group border border-border rounded-md px-3 py-2 bg-card/50 hover:border-foreground/50 transition flex items-start gap-2"
+                    >
+                      <Briefcase className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            router.navigate({
+                              to: "/clients/$clientId",
+                              params: { clientId: p.client_id },
+                              hash: "projects",
+                            })
+                          }
+                          className="text-sm font-semibold truncate block text-left hover:underline underline-offset-4 w-full"
+                        >
+                          {p.name}
+                        </button>
+                        <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground truncate">
+                          {clientName.get(p.client_id) ?? "—"} · {p.status}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setArchived(p.id, false)}
+                        className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-foreground shrink-0"
+                        title="Restore"
+                        aria-label="Restore project"
+                      >
+                        <ArchiveRestore className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {projects.length === 0 && (
             <div className="mt-6 border border-dashed border-border rounded-lg p-12 text-center">
               <Briefcase className="h-10 w-10 mx-auto text-muted-foreground/60" />
