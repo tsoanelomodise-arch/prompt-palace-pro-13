@@ -228,6 +228,7 @@ function ProjectsPane({ clientId }: { clientId: string }) {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
   const [status, setStatus] = useState("active");
+  const [repeatInterval, setRepeatInterval] = useState<RepeatInterval>("none");
 
   const { data: projects = [] } = useQuery({
     queryKey: ["projects", clientId],
@@ -246,12 +247,27 @@ function ProjectsPane({ clientId }: { clientId: string }) {
     e.preventDefault();
     if (!user || !name.trim()) return;
     const { error } = await supabase.from("projects").insert({
-      client_id: clientId, name: name.trim(), status, created_by: user.id,
+      client_id: clientId,
+      name: name.trim(),
+      status,
+      repeat_interval: repeatInterval,
+      created_by: user.id,
     });
     if (error) return toast.error(error.message);
-    setName(""); setStatus("active"); setAdding(false);
+    setName(""); setStatus("active"); setRepeatInterval("none"); setAdding(false);
     qc.invalidateQueries({ queryKey: ["projects", clientId] });
+    qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
     toast.success("Project added");
+  };
+
+  const updateRepeat = async (projectId: string, value: RepeatInterval) => {
+    const { error } = await supabase
+      .from("projects")
+      .update({ repeat_interval: value })
+      .eq("id", projectId);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["projects", clientId] });
+    qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
   };
 
   return (
