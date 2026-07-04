@@ -283,6 +283,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
   const [name, setName] = useState("");
   const [status, setStatus] = useState<PipelineStage>("lead");
   const [notes, setNotes] = useState("");
+  const [repeatInterval, setRepeatInterval] = useState<RepeatInterval>("none");
   const [saving, setSaving] = useState(false);
 
   const reset = () => {
@@ -290,6 +291,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
     setName("");
     setStatus("lead");
     setNotes("");
+    setRepeatInterval("none");
   };
 
   const submit = async (e: React.FormEvent) => {
