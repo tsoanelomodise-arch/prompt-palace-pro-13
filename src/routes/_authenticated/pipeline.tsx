@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PIPELINE_STAGES, REPEAT_INTERVALS, repeatLabel, type PipelineStage, type RepeatInterval } from "@/lib/pipeline";
-import { GripVertical, Briefcase, Plus, Repeat } from "lucide-react";
+import { GripVertical, Briefcase, Plus, Repeat, Archive, ArchiveRestore, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +26,7 @@ type ProjectRow = {
   client_id: string;
   updated_at: string;
   repeat_interval: string;
+  archived_at: string | null;
 };
 
 type ClientLite = { id: string; name: string };
@@ -37,13 +38,14 @@ function PipelinePage() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [overStage, setOverStage] = useState<PipelineStage | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["projects", "pipeline"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id,name,status,notes,client_id,updated_at,repeat_interval")
+        .select("id,name,status,notes,client_id,updated_at,repeat_interval,archived_at")
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return data as ProjectRow[];
@@ -65,18 +67,21 @@ function PipelinePage() {
     return m;
   }, [clients]);
 
+  const activeProjects = useMemo(() => projects.filter((p) => !p.archived_at), [projects]);
+  const archivedProjects = useMemo(() => projects.filter((p) => !!p.archived_at), [projects]);
+
   const grouped = useMemo(() => {
     const map: Record<PipelineStage, ProjectRow[]> = {
       lead: [], proposal: [], active: [], review: [], delivered: [], lost: [],
     };
-    for (const p of projects) {
+    for (const p of activeProjects) {
       if (p.status in map) map[p.status as PipelineStage].push(p);
     }
     return map;
-  }, [projects]);
+  }, [activeProjects]);
 
   const validStages = new Set<string>(PIPELINE_STAGES.map((s) => s.id));
-  const offPipeline = projects.filter((p) => !validStages.has(p.status));
+  const offPipeline = activeProjects.filter((p) => !validStages.has(p.status));
 
   const move = async (projectId: string, stage: PipelineStage) => {
     const current = projects.find((p) => p.id === projectId);
@@ -113,12 +118,31 @@ function PipelinePage() {
     }
   };
 
+  const setArchived = async (projectId: string, archived: boolean) => {
+    qc.setQueryData<ProjectRow[]>(["projects", "pipeline"], (old) =>
+      (old ?? []).map((p) =>
+        p.id === projectId ? { ...p, archived_at: archived ? new Date().toISOString() : null } : p,
+      ),
+    );
+    const { error } = await supabase
+      .from("projects")
+      .update({ archived_at: archived ? new Date().toISOString() : null })
+      .eq("id", projectId);
+    if (error) {
+      toast.error(archived ? "Could not archive" : "Could not restore");
+      qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
+      return;
+    }
+    toast.success(archived ? "Archived" : "Restored");
+    qc.invalidateQueries({ queryKey: ["projects"] });
+  };
+
   return (
     <div className="mx-auto max-w-[1400px] px-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-6 mb-8 pb-8 border-b border-border">
         <div>
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            {projects.length} projects · {offPipeline.length} off pipeline
+            {activeProjects.length} active · {archivedProjects.length} archived · {offPipeline.length} off pipeline
           </p>
           <h1 className="mt-3 font-display text-5xl md:text-6xl font-semibold leading-[0.95] tracking-tight">
             Pipeline.
@@ -221,6 +245,15 @@ function PipelinePage() {
                                 <p className="mt-1.5 text-[11px] text-muted-foreground line-clamp-2">{p.notes}</p>
                               )}
                             </div>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setArchived(p.id, true); }}
+                              className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-foreground shrink-0"
+                              title="Archive"
+                              aria-label="Archive project"
+                            >
+                              <Archive className="h-3.5 w-3.5" />
+                            </button>
                           </div>
                         </div>
                       ))
@@ -259,6 +292,58 @@ function PipelinePage() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {archivedProjects.length > 0 && (
+            <div className="mt-10">
+              <button
+                type="button"
+                onClick={() => setShowArchived((v) => !v)}
+                className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground mb-3"
+              >
+                {showArchived ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                <Archive className="h-3 w-3" /> Archived · {archivedProjects.length}
+              </button>
+              {showArchived && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {archivedProjects.map((p) => (
+                    <div
+                      key={p.id}
+                      className="group border border-border rounded-md px-3 py-2 bg-card/50 hover:border-foreground/50 transition flex items-start gap-2"
+                    >
+                      <Briefcase className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            router.navigate({
+                              to: "/clients/$clientId",
+                              params: { clientId: p.client_id },
+                              hash: "projects",
+                            })
+                          }
+                          className="text-sm font-semibold truncate block text-left hover:underline underline-offset-4 w-full"
+                        >
+                          {p.name}
+                        </button>
+                        <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground truncate">
+                          {clientName.get(p.client_id) ?? "—"} · {p.status}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setArchived(p.id, false)}
+                        className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-foreground shrink-0"
+                        title="Restore"
+                        aria-label="Restore project"
+                      >
+                        <ArchiveRestore className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
