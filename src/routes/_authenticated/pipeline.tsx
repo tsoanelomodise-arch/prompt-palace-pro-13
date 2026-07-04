@@ -212,6 +212,11 @@ function PipelinePage() {
                               >
                                 {clientName.get(p.client_id) ?? "—"}
                               </Link>
+                              {p.repeat_interval && p.repeat_interval !== "none" && (
+                                <div className="mt-1.5 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground border border-border rounded-full px-1.5 py-0.5">
+                                  <Repeat className="h-2.5 w-2.5" /> {repeatLabel(p.repeat_interval)}
+                                </div>
+                              )}
                               {p.notes && (
                                 <p className="mt-1.5 text-[11px] text-muted-foreground line-clamp-2">{p.notes}</p>
                               )}
