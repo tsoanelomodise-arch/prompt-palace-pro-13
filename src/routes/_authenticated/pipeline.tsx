@@ -2,8 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 import { PIPELINE_STAGES, type PipelineStage } from "@/lib/pipeline";
-import { GripVertical, Briefcase } from "lucide-react";
+import { GripVertical, Briefcase, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/pipeline")({
@@ -95,6 +103,7 @@ function PipelinePage() {
             Drag a project card between stages to update its status. Projects with legacy statuses appear below.
           </p>
         </div>
+        <NewProjectButton clients={clients} />
       </div>
 
       {isLoading ? (
