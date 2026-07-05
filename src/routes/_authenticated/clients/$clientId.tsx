@@ -376,6 +376,58 @@ function ProjectsPane({ clientId }: { clientId: string }) {
   );
 }
 
+function EditableProjectName({ name, onSave }: { name: string; onSave: (next: string) => Promise<boolean> }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(name);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { setValue(name); }, [name]);
+
+  const commit = async () => {
+    if (value.trim() === name) { setEditing(false); return; }
+    setSaving(true);
+    const ok = await onSave(value);
+    setSaving(false);
+    if (ok) setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-1.5 flex-1 min-w-0">
+        <Input
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { e.preventDefault(); commit(); }
+            if (e.key === "Escape") { setValue(name); setEditing(false); }
+          }}
+          autoFocus
+          disabled={saving}
+          className="h-8 font-display font-semibold"
+        />
+        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={commit} disabled={saving} title="Save">
+          <Save className="h-3.5 w-3.5" />
+        </Button>
+        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => { setValue(name); setEditing(false); }} disabled={saving} title="Cancel">
+          <X className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      className="group flex items-center gap-1.5 text-left min-w-0"
+      title="Rename project"
+    >
+      <h4 className="font-display font-semibold truncate">{name}</h4>
+      <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition shrink-0" />
+    </button>
+  );
+}
+
 // =====================================================
 // Contacts
 // =====================================================
