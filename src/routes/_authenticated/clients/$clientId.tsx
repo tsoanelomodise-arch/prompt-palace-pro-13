@@ -270,6 +270,26 @@ function ProjectsPane({ clientId }: { clientId: string }) {
     qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
   };
 
+  const renameProject = async (projectId: string, nextName: string) => {
+    const trimmed = nextName.trim();
+    if (!trimmed) {
+      toast.error("Name cannot be empty");
+      return false;
+    }
+    const { error } = await supabase
+      .from("projects")
+      .update({ name: trimmed })
+      .eq("id", projectId);
+    if (error) {
+      toast.error(error.message);
+      return false;
+    }
+    qc.invalidateQueries({ queryKey: ["projects", clientId] });
+    qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
+    toast.success("Project renamed");
+    return true;
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
