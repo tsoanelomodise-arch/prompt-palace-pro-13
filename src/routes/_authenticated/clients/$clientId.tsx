@@ -107,6 +107,41 @@ function ClientDetail() {
                 {client.website.replace(/^https?:\/\//, "")} <ExternalLink className="h-3 w-3" />
               </a>
             )}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  className="inline-flex items-center gap-1 text-muted-foreground hover:text-destructive"
+                  title="Delete client"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> delete
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete {client.name}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This permanently removes the client and all associated projects, contacts, credentials, conversations, and notes. This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={async () => {
+                      const { error } = await supabase.from("clients").delete().eq("id", clientId);
+                      if (error) return toast.error(error.message);
+                      toast.success("Client deleted");
+                      qc.invalidateQueries({ queryKey: ["clients"] });
+                      qc.invalidateQueries({ queryKey: ["clients", "lite"] });
+                      qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
+                      router.navigate({ to: "/clients" });
+                    }}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </div>
