@@ -369,6 +369,9 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
   const [status, setStatus] = useState<PipelineStage>("lead");
   const [notes, setNotes] = useState("");
   const [repeatInterval, setRepeatInterval] = useState<RepeatInterval>("none");
+  const [addingClient, setAddingClient] = useState(false);
+  const [newClientName, setNewClientName] = useState("");
+  const [creatingClient, setCreatingClient] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const reset = () => {
@@ -424,19 +427,64 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div>
-            <Label htmlFor="np-client" className="text-xs">Client</Label>
-            <select
-              id="np-client"
-              value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              className="mt-1.5 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-              required
-            >
-              <option value="">Select a client…</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="np-client" className="text-xs">Client</Label>
+              <button
+                type="button"
+                onClick={() => setAddingClient((v) => !v)}
+                className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+              >
+                {addingClient ? "Pick existing" : "+ New client"}
+              </button>
+            </div>
+            {addingClient ? (
+              <div className="mt-1.5 flex gap-2">
+                <Input
+                  value={newClientName}
+                  onChange={(e) => setNewClientName(e.target.value)}
+                  placeholder="Client name"
+                  className="h-10"
+                  autoFocus
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={creatingClient || !newClientName.trim()}
+                  onClick={async () => {
+                    if (!user) return;
+                    setCreatingClient(true);
+                    const { data, error } = await supabase
+                      .from("clients")
+                      .insert({ name: newClientName.trim(), status: "active", created_by: user.id })
+                      .select("id,name")
+                      .single();
+                    setCreatingClient(false);
+                    if (error) { toast.error(error.message); return; }
+                    toast.success("Client added");
+                    qc.invalidateQueries({ queryKey: ["clients", "lite"] });
+                    qc.invalidateQueries({ queryKey: ["clients"] });
+                    setClientId(data.id);
+                    setNewClientName("");
+                    setAddingClient(false);
+                  }}
+                >
+                  {creatingClient ? "Adding…" : "Add"}
+                </Button>
+              </div>
+            ) : (
+              <select
+                id="np-client"
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+                className="mt-1.5 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                required
+              >
+                <option value="">Select a client…</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            )}
           </div>
           <div>
             <Label htmlFor="np-name" className="text-xs">Project name</Label>
