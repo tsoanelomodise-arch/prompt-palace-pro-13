@@ -106,7 +106,12 @@ function PipelinePage() {
       (old ?? []).map((p) => (p.id === projectId ? { ...p, status: stage } : p)),
     );
 
-    const { error } = await supabase.from("projects").update({ status: stage }).eq("id", projectId);
+    const nowIso = new Date().toISOString();
+    const updates: Record<string, unknown> = { status: stage };
+    if (stage === "delivered" && !current.delivered_at) updates.delivered_at = nowIso;
+    if (stage !== "delivered" && current.delivered_at) updates.delivered_at = null;
+
+    const { error } = await supabase.from("projects").update(updates).eq("id", projectId);
     if (error) {
       toast.error("Could not move project");
       qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
@@ -115,12 +120,14 @@ function PipelinePage() {
 
     // Auto-create the next occurrence when a repeating project is delivered
     if (stage === "delivered" && current.repeat_interval && current.repeat_interval !== "none") {
+      const nextDue = current.next_occurrence_date ?? null;
       const { error: cloneErr } = await supabase.from("projects").insert({
         client_id: current.client_id,
         name: current.name,
         status: "lead",
         notes: current.notes,
         repeat_interval: current.repeat_interval,
+        due_date: nextDue,
         created_by: user?.id ?? null,
       });
       if (cloneErr) {
