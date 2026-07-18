@@ -76,9 +76,12 @@ function RecurringDashboard() {
     name: string;
     interval: RepeatInterval;
     current: ProjectRow | null;
+    wip: ProjectRow[];
     occurrences: number;
     lastDeliveredAt: string | null;
   };
+
+  const WIP_STAGES = new Set<string>(["active", "review"]);
 
   const seriesList = useMemo<Series[]>(() => {
     const byKey = new Map<string, ProjectRow[]>();
@@ -100,12 +103,16 @@ function RecurringDashboard() {
       const deliveredRows = rows
         .filter((r) => r.status === "delivered")
         .sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at));
+      const wip = rows
+        .filter((r) => WIP_STAGES.has(r.status))
+        .sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at));
       out.push({
         key,
         clientId: anyRow.client_id,
         name: anyRow.name,
         interval: anyRow.repeat_interval as RepeatInterval,
         current: inFlight ?? null,
+        wip,
         occurrences: rows.length,
         lastDeliveredAt: deliveredRows[0]?.updated_at ?? null,
       });
