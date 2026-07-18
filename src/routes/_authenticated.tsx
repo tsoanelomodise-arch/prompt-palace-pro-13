@@ -118,6 +118,7 @@ function PipelineGroup() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const items = [
     { to: "/pipeline", icon: <KanbanSquare className="h-3.5 w-3.5" />, label: "Pipeline" },
+    { to: "/implementation", icon: <KanbanSquare className="h-3.5 w-3.5" />, label: "Implementation" },
     { to: "/recurring", icon: <Repeat className="h-3.5 w-3.5" />, label: "Recurring" },
   ];
   const isActive = items.some((i) => (i.to === "/" ? pathname === "/" : pathname.startsWith(i.to)));

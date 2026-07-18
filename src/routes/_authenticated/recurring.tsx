@@ -498,7 +498,11 @@ function RecurringDashboard() {
   );
 }
 
-export function PipelineTabs({ current }: { current: "pipeline" | "recurring" }) {
+export function PipelineTabs({
+  current,
+}: {
+  current: "pipeline" | "recurring" | "implementation";
+}) {
   const base =
     "font-mono text-[11px] uppercase tracking-widest px-3 py-1.5 rounded-md border transition inline-flex items-center gap-1.5";
   const active = "bg-foreground text-background border-foreground";
@@ -507,6 +511,12 @@ export function PipelineTabs({ current }: { current: "pipeline" | "recurring" })
     <div className="flex items-center gap-2">
       <Link to="/pipeline" className={`${base} ${current === "pipeline" ? active : idle}`}>
         <KanbanSquare className="h-3.5 w-3.5" /> Pipeline
+      </Link>
+      <Link
+        to="/implementation"
+        className={`${base} ${current === "implementation" ? active : idle}`}
+      >
+        <KanbanSquare className="h-3.5 w-3.5" /> Implementation
       </Link>
       <Link to="/recurring" className={`${base} ${current === "recurring" ? active : idle}`}>
         <Repeat className="h-3.5 w-3.5" /> Recurring
