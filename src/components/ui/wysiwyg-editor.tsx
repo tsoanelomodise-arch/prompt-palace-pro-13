@@ -199,7 +199,7 @@ export function WysiwygEditor({ value, onValueChange, placeholder, className }: 
     extensions: [
       StarterKit.configure({ link: false }),
       Link.configure({ openOnClick: false, autolink: true, HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" } }),
-      Image.configure({ inline: false, allowBase64: false }),
+      ResizableImage.configure({ inline: false, allowBase64: false }),
       Placeholder.configure({ placeholder: placeholder ?? "Start writing…" }),
       Markdown.configure({
         html: true,
