@@ -396,7 +396,7 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
         ) : (
           <Textarea
             ref={innerRef}
-            value={value}
+            value={displayValue}
             onChange={onTextareaChange}
             onKeyDown={onTextareaKeyDown}
             onBlur={() => setTimeout(closeMention, 150)}
