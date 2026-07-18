@@ -84,6 +84,7 @@ function RecurringDashboard() {
     wip: ProjectRow[];
     occurrences: number;
     lastDeliveredAt: string | null;
+    nextDate: string | null;
   };
 
   const WIP_STAGES = new Set<string>(["active", "review"]);
@@ -98,8 +99,7 @@ function RecurringDashboard() {
       byKey.set(k, arr);
     }
     const out: Series[] = [];
-    for (const [key, rows] of byKey) {
-      // Prefer an "in-flight" occurrence (not delivered, not lost) as current.
+    for (const [, rows] of byKey) {
       const inFlight = rows
         .filter((r) => r.status !== "delivered" && r.status !== "lost")
         .sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at))[0];
@@ -107,23 +107,37 @@ function RecurringDashboard() {
         inFlight ?? rows.sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at))[0];
       const deliveredRows = rows
         .filter((r) => r.status === "delivered")
-        .sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at));
+        .sort((a, b) => {
+          const ad = a.delivered_at ?? a.updated_at;
+          const bd = b.delivered_at ?? b.updated_at;
+          return +new Date(bd) - +new Date(ad);
+        });
       const wip = rows
         .filter((r) => WIP_STAGES.has(r.status))
         .sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at));
+      // Prefer the next_occurrence_date on any current/wip row; else the due_date of the earliest in-flight.
+      const nextDate =
+        inFlight?.next_occurrence_date ??
+        wip[0]?.next_occurrence_date ??
+        inFlight?.due_date ??
+        deliveredRows[0]?.next_occurrence_date ??
+        null;
       out.push({
-        key,
+        key: `${anyRow.client_id}::${anyRow.name.toLowerCase().trim()}`,
         clientId: anyRow.client_id,
         name: anyRow.name,
         interval: anyRow.repeat_interval as RepeatInterval,
         current: inFlight ?? null,
         wip,
         occurrences: rows.length,
-        lastDeliveredAt: deliveredRows[0]?.updated_at ?? null,
+        lastDeliveredAt: deliveredRows[0]?.delivered_at ?? deliveredRows[0]?.updated_at ?? null,
+        nextDate,
       });
     }
     return out.sort((a, b) => a.name.localeCompare(b.name));
   }, [projects]);
+
+  const nextDueForSeries = (s: Series): string | null => s.nextDate;
 
   const grouped = useMemo(() => {
     const g: Record<RepeatInterval, Series[]> = {
