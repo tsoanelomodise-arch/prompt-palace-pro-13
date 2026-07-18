@@ -1188,11 +1188,16 @@ function ConversationsPane({ clientId }: { clientId: string }) {
               {projects.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
-          <div className="sm:col-span-2 flex justify-end gap-2">
-            <Button type="button" variant="ghost" size="sm" onClick={resetForm}>Cancel</Button>
-            <Button type="submit" size="sm" disabled={saving}>
-              {saving ? "Saving…" : editingId ? "Update" : "Log conversation"}
-            </Button>
+          <div className="sm:col-span-2 flex items-center justify-between gap-2">
+            {editingId ? <SaveStatus status={convoAutosave.status} /> : <span />}
+            <div className="flex gap-2">
+              <Button type="button" variant="ghost" size="sm" onClick={resetForm}>{editingId ? "Done" : "Cancel"}</Button>
+              {!editingId && (
+                <Button type="submit" size="sm" disabled={saving}>
+                  {saving ? "Saving…" : "Log conversation"}
+                </Button>
+              )}
+            </div>
           </div>
         </form>
       )}
