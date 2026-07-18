@@ -388,30 +388,59 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
 
 
         {!showPreview && images.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {images.map((img, i) => (
-              <div
-                key={`${img.url.slice(0, 32)}-${i}`}
-                className="group relative h-16 w-16 overflow-hidden rounded-md border border-border bg-muted"
-                title={img.alt || "image"}
-              >
-                <img
-                  src={img.url}
-                  alt={img.alt}
-                  className="h-full w-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeImage(img.match)}
-                  className="absolute right-0.5 top-0.5 rounded-full bg-background/90 p-0.5 text-foreground opacity-0 shadow transition group-hover:opacity-100"
-                  aria-label="Remove image"
+          <div className="mt-3 rounded-md border border-border bg-paper-soft/40 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Embedded images · {images.length}
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/70">
+                Click to enlarge
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {images.map((img, i) => (
+                <div
+                  key={`${img.url.slice(0, 32)}-${i}`}
+                  className="group relative h-32 w-32 overflow-hidden rounded-md border border-border bg-muted shadow-sm"
+                  title={img.alt || "image"}
                 >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
+                  <button
+                    type="button"
+                    onClick={() => setLightbox({ url: img.url, alt: img.alt })}
+                    className="block h-full w-full"
+                  >
+                    <img
+                      src={img.url}
+                      alt={img.alt}
+                      className="h-full w-full object-cover transition group-hover:scale-105"
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeImage(img.match)}
+                    className="absolute right-1 top-1 rounded-full bg-background/90 p-1 text-foreground opacity-0 shadow transition group-hover:opacity-100"
+                    aria-label="Remove image"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         )}
+
+        {lightbox && (
+          <Dialog open onOpenChange={(o) => !o && setLightbox(null)}>
+            <DialogContent className="max-w-4xl p-2">
+              <img
+                src={lightbox.url}
+                alt={lightbox.alt}
+                className="mx-auto max-h-[80vh] w-auto rounded"
+              />
+            </DialogContent>
+          </Dialog>
+        )}
+
 
         {toolbar && (
           <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
