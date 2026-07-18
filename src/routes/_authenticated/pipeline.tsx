@@ -705,5 +705,4 @@ function DatePill({ icon, date }: { icon: "start" | "due" | "delivered" | "next"
   );
 }
 
-// parseDateOnly is re-exported via the import so linter keeps it referenced
-void parseDateOnly;
+
