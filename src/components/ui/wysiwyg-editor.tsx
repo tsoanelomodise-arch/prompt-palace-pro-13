@@ -4,7 +4,7 @@ import Link from "@tiptap/extension-link";
 import { ResizableImage } from "./wysiwyg-image-node";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Markdown } from "tiptap-markdown";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,8 @@ import {
   Minus, CodeSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ImageCropDialog } from "./image-crop-dialog";
+
 
 const MAX_DIMENSION = 1600;
 const JPEG_QUALITY = 0.82;
