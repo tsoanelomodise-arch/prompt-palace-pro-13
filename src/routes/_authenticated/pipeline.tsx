@@ -99,6 +99,22 @@ function PipelinePage() {
     [activeProjects],
   );
 
+  const wipItems = useMemo(
+    () =>
+      filteredActive
+        .filter((p) => p.status === "active" || p.status === "review")
+        .sort((a, b) => {
+          const ad = daysUntil(a.due_date);
+          const bd = daysUntil(b.due_date);
+          if (ad === null && bd === null) return 0;
+          if (ad === null) return 1;
+          if (bd === null) return -1;
+          return ad - bd;
+        }),
+    [filteredActive],
+  );
+  const wipOverdue = wipItems.filter((p) => (daysUntil(p.due_date) ?? 0) < 0).length;
+
   const move = async (projectId: string, stage: PipelineStage) => {
     const current = projects.find((p) => p.id === projectId);
     if (!current || current.status === stage) return;
@@ -214,6 +230,109 @@ function PipelinePage() {
         <div className="text-sm text-muted-foreground">Loading pipeline…</div>
       ) : (
         <>
+          {wipItems.length > 0 && (
+            <div className="mb-6 border border-border rounded-lg bg-card">
+              <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Work in progress
+                  </span>
+                  <span className="font-mono text-[11px] tabular-nums text-muted-foreground bg-paper-soft rounded-full px-2 py-0.5">
+                    {wipItems.length}
+                  </span>
+                  {wipOverdue > 0 && (
+                    <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest border border-destructive/40 bg-destructive/10 text-destructive rounded-full px-2 py-0.5">
+                      <AlertTriangle className="h-2.5 w-2.5" /> {wipOverdue} overdue
+                    </span>
+                  )}
+                </div>
+                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/70">
+                  Active + review
+                </span>
+              </div>
+              <ul className="divide-y divide-border">
+                {wipItems.map((p) => {
+                  const meta = PIPELINE_STAGES.find((s) => s.id === p.status);
+                  const d = daysUntil(p.due_date);
+                  const overdue = d !== null && d < 0;
+                  return (
+                    <li
+                      key={p.id}
+                      className="px-4 py-2.5 flex items-center gap-3 hover:bg-paper-soft/40 transition"
+                    >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          router.navigate({
+                            to: "/clients/$clientId",
+                            params: { clientId: p.client_id },
+                            hash: "projects",
+                          })
+                        }
+                        className="min-w-0 flex-1 text-left"
+                      >
+                        <div className="font-display font-semibold text-sm truncate hover:underline underline-offset-4">
+                          {p.name}
+                        </div>
+                        <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground truncate">
+                          {clientName.get(p.client_id) ?? "—"}
+                        </div>
+                      </button>
+                      {meta && (
+                        <span
+                          className={`font-mono text-[10px] uppercase tracking-widest border rounded-full px-2 py-0.5 ${
+                            p.status === "review"
+                              ? "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                              : "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                          }`}
+                        >
+                          {meta.label}
+                        </span>
+                      )}
+                      <ProjectDatesPopover
+                        project={p}
+                        align="end"
+                        trigger={
+                          <button
+                            type="button"
+                            className={`inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest border rounded-full px-2 py-0.5 cursor-pointer hover:border-foreground ${
+                              p.due_date
+                                ? overdue
+                                  ? "border-destructive/40 bg-destructive/10 text-destructive"
+                                  : "border-border bg-paper-soft"
+                                : "border-dashed border-border text-muted-foreground"
+                            }`}
+                            title={
+                              p.due_date
+                                ? overdue
+                                  ? `Overdue by ${Math.abs(d!)}d`
+                                  : d !== null
+                                    ? `Due in ${d}d`
+                                    : undefined
+                                : "Set due date"
+                            }
+                          >
+                            {p.due_date ? (
+                              <>
+                                <CalendarClock className="h-2.5 w-2.5" />
+                                {formatShortDate(p.due_date)}
+                                {overdue && <AlertTriangle className="h-2.5 w-2.5" />}
+                              </>
+                            ) : (
+                              <>
+                                <CalendarPlus className="h-2.5 w-2.5" /> Set due
+                              </>
+                            )}
+                          </button>
+                        }
+                      />
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             {PIPELINE_STAGES.map((stage) => {
               const items = grouped[stage.id];
