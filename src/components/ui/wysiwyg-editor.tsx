@@ -1,7 +1,7 @@
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
+import { ResizableImage } from "./wysiwyg-image-node";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Markdown } from "tiptap-markdown";
 import { useEffect, useRef, useCallback } from "react";
@@ -199,7 +199,7 @@ export function WysiwygEditor({ value, onValueChange, placeholder, className }: 
     extensions: [
       StarterKit.configure({ link: false }),
       Link.configure({ openOnClick: false, autolink: true, HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" } }),
-      Image.configure({ inline: false, allowBase64: false }),
+      ResizableImage.configure({ inline: false, allowBase64: false }),
       Placeholder.configure({ placeholder: placeholder ?? "Start writing…" }),
       Markdown.configure({
         html: true,
