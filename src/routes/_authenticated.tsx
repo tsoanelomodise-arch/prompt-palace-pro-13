@@ -46,8 +46,7 @@ function AuthLayout() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-1 ml-4">
-            <NavLink to="/pipeline" icon={<KanbanSquare className="h-3.5 w-3.5" />}>Pipeline</NavLink>
-            <NavLink to="/recurring" icon={<Repeat className="h-3.5 w-3.5" />}>Recurring</NavLink>
+            <PipelineGroup />
             <NavLink to="/clients" icon={<Users className="h-3.5 w-3.5" />}>Clients</NavLink>
             <NavLink to="/logins" icon={<KeyRound className="h-3.5 w-3.5" />}>Logins</NavLink>
             <NavLink to="/" icon={<Library className="h-3.5 w-3.5" />}>Prompts</NavLink>
