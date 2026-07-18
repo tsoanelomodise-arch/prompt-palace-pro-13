@@ -192,6 +192,15 @@ type Props = {
 
 export function WysiwygEditor({ value, onValueChange, placeholder, className }: Props) {
   const lastEmitted = useRef<string>(value);
+  const [queue, setQueue] = useState<File[]>([]);
+  const enqueueFilesRef = useRef<(files: File[]) => void>(() => {});
+
+  const enqueueFiles = useCallback((files: File[]) => {
+    const imgs = files.filter((f) => f.type.startsWith("image/"));
+    if (imgs.length === 0) return;
+    setQueue((q) => [...q, ...imgs]);
+  }, []);
+  enqueueFilesRef.current = enqueueFiles;
 
   const editor = useEditor({
     extensions: [
@@ -214,40 +223,22 @@ export function WysiwygEditor({ value, onValueChange, placeholder, className }: 
       attributes: {
         class: "prose prose-sm max-w-none focus:outline-none px-4 py-4 min-h-[420px]",
       },
-      handlePaste: (view, event) => {
+      handlePaste: (_view, event) => {
         const files = Array.from(event.clipboardData?.files ?? []).filter((f) =>
           f.type.startsWith("image/"),
         );
         if (files.length === 0) return false;
         event.preventDefault();
-        (async () => {
-          for (const file of files) {
-            try {
-              const url = await uploadImage(file);
-              editor?.chain().focus().setImage({ src: url }).run();
-            } catch (e: any) {
-              toast.error(e?.message ?? "Upload failed");
-            }
-          }
-        })();
+        enqueueFilesRef.current(files);
         return true;
       },
-      handleDrop: (view, event) => {
-        const files = Array.from(event.dataTransfer?.files ?? []).filter((f) =>
+      handleDrop: (_view, event) => {
+        const files = Array.from((event as DragEvent).dataTransfer?.files ?? []).filter((f) =>
           f.type.startsWith("image/"),
         );
         if (files.length === 0) return false;
         event.preventDefault();
-        (async () => {
-          for (const file of files) {
-            try {
-              const url = await uploadImage(file);
-              editor?.chain().focus().setImage({ src: url }).run();
-            } catch (e: any) {
-              toast.error(e?.message ?? "Upload failed");
-            }
-          }
-        })();
+        enqueueFilesRef.current(files);
         return true;
       },
     },
@@ -269,6 +260,23 @@ export function WysiwygEditor({ value, onValueChange, placeholder, className }: 
 
   useEffect(() => () => editor?.destroy(), [editor]);
 
+  const current = queue[0] ?? null;
+
+  const finishCurrent = useCallback(
+    async (file: File | null) => {
+      // Pop head regardless of success so we advance the queue.
+      setQueue((q) => q.slice(1));
+      if (!file || !editor) return;
+      try {
+        const url = await uploadImage(file);
+        editor.chain().focus().setImage({ src: url }).run();
+      } catch (e: any) {
+        toast.error(e?.message ?? "Upload failed");
+      }
+    },
+    [editor],
+  );
+
   if (!editor) {
     return (
       <div className={cn("border border-border rounded-md bg-background", className)}>
@@ -279,8 +287,14 @@ export function WysiwygEditor({ value, onValueChange, placeholder, className }: 
 
   return (
     <div className={cn("border border-border rounded-md bg-background overflow-hidden", className)}>
-      <Toolbar editor={editor} />
+      <Toolbar editor={editor} onPickImage={(f) => enqueueFiles([f])} />
       <EditorContent editor={editor} />
+      <ImageCropDialog
+        file={current}
+        onCancel={() => finishCurrent(null)}
+        onResolved={(f) => finishCurrent(f)}
+      />
     </div>
   );
 }
+
