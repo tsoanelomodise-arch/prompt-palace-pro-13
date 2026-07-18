@@ -137,6 +137,7 @@ function RecurringDashboard() {
   const totals = {
     series: seriesList.length,
     inFlight: seriesList.filter((s) => s.current).length,
+    wip: seriesList.reduce((n, s) => n + s.wip.length, 0),
     dueNext: seriesList.filter((s) => !s.current).length,
   };
 
