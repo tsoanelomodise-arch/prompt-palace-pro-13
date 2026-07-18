@@ -54,16 +54,10 @@ function PageEdit() {
     setParentId(data.page.parent_id ?? "");
   }, [data?.page]);
 
-  if (isLoading) return <div className="text-sm text-muted-foreground">Loading…</div>;
-  if (!data?.page) return <div className="text-sm text-muted-foreground">Page not found.</div>;
-
-  const canEdit = isAdmin || data.page.created_by === user?.id;
-  if (!canEdit) {
-    return <div className="text-sm text-muted-foreground">You don't have permission to edit this page.</div>;
-  }
-
-  const pageId = data.page.id;
+  const pageId = data?.page?.id ?? "";
+  const canEditNow = !!data?.page && (isAdmin || data.page.created_by === user?.id);
   const persist = async (v: { title: string; content: string; excerpt: string; status: "draft" | "published"; parentId: string }) => {
+    if (!pageId) return;
     if (!v.title.trim()) throw new Error("Title required");
     const { error } = await supabase
       .from("wiki_pages")
@@ -84,8 +78,14 @@ function PageEdit() {
   const autosave = useAutosave(
     { title, content, excerpt, status, parentId },
     persist,
-    { enabled: canEdit && !!data.page },
+    { enabled: canEditNow },
   );
+
+  if (isLoading) return <div className="text-sm text-muted-foreground">Loading…</div>;
+  if (!data?.page) return <div className="text-sm text-muted-foreground">Page not found.</div>;
+  if (!canEditNow) {
+    return <div className="text-sm text-muted-foreground">You don't have permission to edit this page.</div>;
+  }
 
   const done = async () => {
     try {
