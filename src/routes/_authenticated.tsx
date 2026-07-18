@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, redirect, Link, useRouter } from "@tanstack/re
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { BookMarked, LogOut, Users, Library, Shield, BookOpen, KanbanSquare } from "lucide-react";
+import { BookMarked, LogOut, Users, Library, Shield, BookOpen, KanbanSquare, Repeat } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
@@ -40,6 +40,7 @@ function AuthLayout() {
 
           <nav className="hidden md:flex items-center gap-1 ml-4">
             <NavLink to="/pipeline" icon={<KanbanSquare className="h-3.5 w-3.5" />}>Pipeline</NavLink>
+            <NavLink to="/recurring" icon={<Repeat className="h-3.5 w-3.5" />}>Recurring</NavLink>
             <NavLink to="/clients" icon={<Users className="h-3.5 w-3.5" />}>Clients</NavLink>
             <NavLink to="/" icon={<Library className="h-3.5 w-3.5" />}>Prompts</NavLink>
             <NavLink to="/wiki" icon={<BookOpen className="h-3.5 w-3.5" />}>Wiki</NavLink>
@@ -65,6 +66,7 @@ function AuthLayout() {
         {/* Mobile nav */}
         <nav className="md:hidden flex items-center gap-1 px-6 pb-3 -mt-1 overflow-x-auto">
           <NavLink to="/pipeline" icon={<KanbanSquare className="h-3.5 w-3.5" />}>Pipeline</NavLink>
+          <NavLink to="/recurring" icon={<Repeat className="h-3.5 w-3.5" />}>Recurring</NavLink>
           <NavLink to="/clients" icon={<Users className="h-3.5 w-3.5" />}>Clients</NavLink>
           <NavLink to="/" icon={<Library className="h-3.5 w-3.5" />}>Prompts</NavLink>
           <NavLink to="/wiki" icon={<BookOpen className="h-3.5 w-3.5" />}>Wiki</NavLink>

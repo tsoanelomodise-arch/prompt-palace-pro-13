@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PIPELINE_STAGES, REPEAT_INTERVALS, repeatLabel, type PipelineStage, type RepeatInterval } from "@/lib/pipeline";
+import { PipelineTabs } from "./recurring";
 import { GripVertical, Briefcase, Plus, Repeat, Archive, ArchiveRestore, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -151,7 +152,10 @@ function PipelinePage() {
             Drag a project card between stages to update its status. Projects with legacy statuses appear below.
           </p>
         </div>
-        <NewProjectButton clients={clients} />
+        <div className="flex items-center gap-3">
+          <PipelineTabs current="pipeline" />
+          <NewProjectButton clients={clients} />
+        </div>
       </div>
 
       {isLoading ? (
