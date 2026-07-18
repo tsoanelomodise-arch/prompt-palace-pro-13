@@ -17,6 +17,7 @@ import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/t
 import { Route as AuthenticatedRecurringRouteImport } from './routes/_authenticated/recurring'
 import { Route as AuthenticatedPipelineRouteImport } from './routes/_authenticated/pipeline'
 import { Route as AuthenticatedNewRouteImport } from './routes/_authenticated/new'
+import { Route as AuthenticatedLoginsRouteImport } from './routes/_authenticated/logins'
 import { Route as AuthenticatedIdRouteImport } from './routes/_authenticated/$id'
 import { Route as AuthenticatedWikiIndexRouteImport } from './routes/_authenticated/wiki.index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients/index'
@@ -63,6 +64,11 @@ const AuthenticatedPipelineRoute = AuthenticatedPipelineRouteImport.update({
 const AuthenticatedNewRoute = AuthenticatedNewRouteImport.update({
   id: '/new',
   path: '/new',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedLoginsRoute = AuthenticatedLoginsRouteImport.update({
+  id: '/logins',
+  path: '/logins',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedIdRoute = AuthenticatedIdRouteImport.update({
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/$id': typeof AuthenticatedIdRoute
+  '/logins': typeof AuthenticatedLoginsRoute
   '/new': typeof AuthenticatedNewRoute
   '/pipeline': typeof AuthenticatedPipelineRoute
   '/recurring': typeof AuthenticatedRecurringRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/$id': typeof AuthenticatedIdRoute
+  '/logins': typeof AuthenticatedLoginsRoute
   '/new': typeof AuthenticatedNewRoute
   '/pipeline': typeof AuthenticatedPipelineRoute
   '/recurring': typeof AuthenticatedRecurringRoute
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/_authenticated/$id': typeof AuthenticatedIdRoute
+  '/_authenticated/logins': typeof AuthenticatedLoginsRoute
   '/_authenticated/new': typeof AuthenticatedNewRoute
   '/_authenticated/pipeline': typeof AuthenticatedPipelineRoute
   '/_authenticated/recurring': typeof AuthenticatedRecurringRoute
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/$id'
+    | '/logins'
     | '/new'
     | '/pipeline'
     | '/recurring'
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/$id'
+    | '/logins'
     | '/new'
     | '/pipeline'
     | '/recurring'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/login'
     | '/_authenticated/$id'
+    | '/_authenticated/logins'
     | '/_authenticated/new'
     | '/_authenticated/pipeline'
     | '/_authenticated/recurring'
@@ -278,6 +290,13 @@ declare module '@tanstack/react-router' {
       path: '/new'
       fullPath: '/new'
       preLoaderRoute: typeof AuthenticatedNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/logins': {
+      id: '/_authenticated/logins'
+      path: '/logins'
+      fullPath: '/logins'
+      preLoaderRoute: typeof AuthenticatedLoginsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/$id': {
@@ -372,6 +391,7 @@ const AuthenticatedWikiRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedIdRoute: typeof AuthenticatedIdRoute
+  AuthenticatedLoginsRoute: typeof AuthenticatedLoginsRoute
   AuthenticatedNewRoute: typeof AuthenticatedNewRoute
   AuthenticatedPipelineRoute: typeof AuthenticatedPipelineRoute
   AuthenticatedRecurringRoute: typeof AuthenticatedRecurringRoute
@@ -385,6 +405,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIdRoute: AuthenticatedIdRoute,
+  AuthenticatedLoginsRoute: AuthenticatedLoginsRoute,
   AuthenticatedNewRoute: AuthenticatedNewRoute,
   AuthenticatedPipelineRoute: AuthenticatedPipelineRoute,
   AuthenticatedRecurringRoute: AuthenticatedRecurringRoute,
@@ -407,13 +428,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
