@@ -286,7 +286,7 @@ export function WysiwygEditor({ value, onValueChange, placeholder, className }: 
   }
 
   return (
-    <div className={cn("border border-border rounded-md bg-background overflow-hidden", className)}>
+    <div className={cn("border border-border rounded-md bg-background", className)}>
       <Toolbar editor={editor} onPickImage={(f) => enqueueFiles([f])} />
       <EditorContent editor={editor} />
       <ImageCropDialog
