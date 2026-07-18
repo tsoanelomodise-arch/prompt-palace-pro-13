@@ -287,11 +287,15 @@ export type Database = {
           client_id: string
           created_at: string
           created_by: string | null
+          delivered_at: string | null
+          due_date: string | null
           ends_on: string | null
           id: string
           name: string
+          next_occurrence_date: string | null
           notes: string | null
           repeat_interval: string
+          start_date: string | null
           starts_on: string | null
           status: string
           updated_at: string
@@ -301,11 +305,15 @@ export type Database = {
           client_id: string
           created_at?: string
           created_by?: string | null
+          delivered_at?: string | null
+          due_date?: string | null
           ends_on?: string | null
           id?: string
           name: string
+          next_occurrence_date?: string | null
           notes?: string | null
           repeat_interval?: string
+          start_date?: string | null
           starts_on?: string | null
           status?: string
           updated_at?: string
@@ -315,11 +323,15 @@ export type Database = {
           client_id?: string
           created_at?: string
           created_by?: string | null
+          delivered_at?: string | null
+          due_date?: string | null
           ends_on?: string | null
           id?: string
           name?: string
+          next_occurrence_date?: string | null
           notes?: string | null
           repeat_interval?: string
+          start_date?: string | null
           starts_on?: string | null
           status?: string
           updated_at?: string

@@ -10,9 +10,10 @@ import {
   type PipelineStage,
   type RepeatInterval,
 } from "@/lib/pipeline";
-import { Repeat, CheckCircle2, KanbanSquare, Briefcase } from "lucide-react";
+import { Repeat, CheckCircle2, KanbanSquare, Briefcase, CalendarClock, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow, format } from "date-fns";
+import { daysUntil, formatShortDate } from "@/lib/pipeline";
 
 export const Route = createFileRoute("/_authenticated/recurring")({
   component: RecurringDashboard,
@@ -28,6 +29,10 @@ type ProjectRow = {
   updated_at: string;
   repeat_interval: string;
   archived_at: string | null;
+  start_date: string | null;
+  due_date: string | null;
+  delivered_at: string | null;
+  next_occurrence_date: string | null;
 };
 
 type ClientLite = { id: string; name: string };
@@ -46,7 +51,7 @@ function RecurringDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id,name,status,notes,client_id,created_at,updated_at,repeat_interval,archived_at")
+        .select("id,name,status,notes,client_id,created_at,updated_at,repeat_interval,archived_at,start_date,due_date,delivered_at,next_occurrence_date")
         .neq("repeat_interval", "none")
         .order("updated_at", { ascending: false });
       if (error) throw error;
@@ -79,6 +84,7 @@ function RecurringDashboard() {
     wip: ProjectRow[];
     occurrences: number;
     lastDeliveredAt: string | null;
+    nextDate: string | null;
   };
 
   const WIP_STAGES = new Set<string>(["active", "review"]);
@@ -93,8 +99,7 @@ function RecurringDashboard() {
       byKey.set(k, arr);
     }
     const out: Series[] = [];
-    for (const [key, rows] of byKey) {
-      // Prefer an "in-flight" occurrence (not delivered, not lost) as current.
+    for (const [, rows] of byKey) {
       const inFlight = rows
         .filter((r) => r.status !== "delivered" && r.status !== "lost")
         .sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at))[0];
@@ -102,23 +107,37 @@ function RecurringDashboard() {
         inFlight ?? rows.sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at))[0];
       const deliveredRows = rows
         .filter((r) => r.status === "delivered")
-        .sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at));
+        .sort((a, b) => {
+          const ad = a.delivered_at ?? a.updated_at;
+          const bd = b.delivered_at ?? b.updated_at;
+          return +new Date(bd) - +new Date(ad);
+        });
       const wip = rows
         .filter((r) => WIP_STAGES.has(r.status))
         .sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at));
+      // Prefer the next_occurrence_date on any current/wip row; else the due_date of the earliest in-flight.
+      const nextDate =
+        inFlight?.next_occurrence_date ??
+        wip[0]?.next_occurrence_date ??
+        inFlight?.due_date ??
+        deliveredRows[0]?.next_occurrence_date ??
+        null;
       out.push({
-        key,
+        key: `${anyRow.client_id}::${anyRow.name.toLowerCase().trim()}`,
         clientId: anyRow.client_id,
         name: anyRow.name,
         interval: anyRow.repeat_interval as RepeatInterval,
         current: inFlight ?? null,
         wip,
         occurrences: rows.length,
-        lastDeliveredAt: deliveredRows[0]?.updated_at ?? null,
+        lastDeliveredAt: deliveredRows[0]?.delivered_at ?? deliveredRows[0]?.updated_at ?? null,
+        nextDate,
       });
     }
     return out.sort((a, b) => a.name.localeCompare(b.name));
   }, [projects]);
+
+  const nextDueForSeries = (s: Series): string | null => s.nextDate;
 
   const grouped = useMemo(() => {
     const g: Record<RepeatInterval, Series[]> = {
@@ -149,6 +168,7 @@ function RecurringDashboard() {
         name: s.name,
         status: "lead",
         repeat_interval: s.interval,
+        due_date: nextDueForSeries(s),
         created_by: user?.id ?? null,
       });
       if (error) {
@@ -163,7 +183,7 @@ function RecurringDashboard() {
     const current = s.current;
     const { error } = await supabase
       .from("projects")
-      .update({ status: "delivered" })
+      .update({ status: "delivered", delivered_at: new Date().toISOString() })
       .eq("id", current.id);
     if (error) {
       toast.error("Could not mark delivered");
@@ -175,6 +195,7 @@ function RecurringDashboard() {
       status: "lead",
       notes: current.notes,
       repeat_interval: current.repeat_interval,
+      due_date: current.next_occurrence_date ?? nextDueForSeries(s),
       created_by: user?.id ?? null,
     });
     if (cloneErr) {
@@ -242,6 +263,7 @@ function RecurringDashboard() {
                         <th className="px-4 py-3">Project</th>
                         <th className="px-4 py-3">Client</th>
                         <th className="px-4 py-3">Current stage</th>
+                        <th className="px-4 py-3">Next occurrence</th>
                         <th className="px-4 py-3">Work in progress</th>
                         <th className="px-4 py-3">Last delivered</th>
                         <th className="px-4 py-3 text-center">Occurrences</th>
@@ -296,12 +318,38 @@ function RecurringDashboard() {
                               )}
                             </td>
                             <td className="px-4 py-3">
+                              {s.nextDate ? (
+                                (() => {
+                                  const d = daysUntil(s.nextDate);
+                                  const overdue = d !== null && d < 0;
+                                  return (
+                                    <span
+                                      title={overdue ? `Overdue by ${Math.abs(d!)}d` : d !== null ? `In ${d}d` : undefined}
+                                      className={`inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest border rounded-full px-2 py-0.5 ${
+                                        overdue
+                                          ? "border-destructive/40 bg-destructive/10 text-destructive"
+                                          : "border-border text-foreground bg-paper-soft"
+                                      }`}
+                                    >
+                                      <CalendarClock className="h-2.5 w-2.5" />
+                                      {formatShortDate(s.nextDate)}
+                                      {overdue && <AlertTriangle className="h-2.5 w-2.5" />}
+                                    </span>
+                                  );
+                                })()
+                              ) : (
+                                <span className="text-muted-foreground/60">—</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
                               {s.wip.length === 0 ? (
                                 <span className="text-muted-foreground/60">—</span>
                               ) : (
                                 <div className="flex flex-wrap gap-1.5">
                                   {s.wip.map((w) => {
                                     const wm = stageMeta(w.status);
+                                    const dd = daysUntil(w.due_date);
+                                    const wOverdue = dd !== null && dd < 0;
                                     return (
                                       <button
                                         key={w.id}
@@ -313,10 +361,22 @@ function RecurringDashboard() {
                                             hash: "projects",
                                           })
                                         }
-                                        title={`Updated ${formatDistanceToNow(new Date(w.updated_at), { addSuffix: true })}`}
+                                        title={`Updated ${formatDistanceToNow(new Date(w.updated_at), { addSuffix: true })}${w.due_date ? ` · Due ${formatShortDate(w.due_date)}` : ""}`}
                                         className="inline-flex items-center gap-1"
                                       >
                                         {wm && <StagePill stage={wm.id} label={wm.label} />}
+                                        {w.due_date && (
+                                          <span
+                                            className={`inline-flex items-center gap-0.5 font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${
+                                              wOverdue
+                                                ? "border-destructive/40 bg-destructive/10 text-destructive"
+                                                : "border-border text-muted-foreground"
+                                            }`}
+                                          >
+                                            <CalendarClock className="h-2.5 w-2.5" />
+                                            {formatShortDate(w.due_date)}
+                                          </span>
+                                        )}
                                       </button>
                                     );
                                   })}

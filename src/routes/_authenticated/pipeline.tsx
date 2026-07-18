@@ -3,9 +3,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { PIPELINE_STAGES, REPEAT_INTERVALS, repeatLabel, type PipelineStage, type RepeatInterval } from "@/lib/pipeline";
+import { PIPELINE_STAGES, REPEAT_INTERVALS, repeatLabel, DATE_FILTERS, matchesDateFilter, daysUntil, formatShortDate, type PipelineStage, type RepeatInterval, type DateFilter } from "@/lib/pipeline";
 import { PipelineTabs } from "./recurring";
-import { GripVertical, Briefcase, Plus, Repeat, Archive, ArchiveRestore, ChevronDown, ChevronRight } from "lucide-react";
+import { GripVertical, Briefcase, Plus, Repeat, Archive, ArchiveRestore, ChevronDown, ChevronRight, CalendarClock, CalendarCheck2, CalendarDays, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +28,10 @@ type ProjectRow = {
   updated_at: string;
   repeat_interval: string;
   archived_at: string | null;
+  start_date: string | null;
+  due_date: string | null;
+  delivered_at: string | null;
+  next_occurrence_date: string | null;
 };
 
 type ClientLite = { id: string; name: string };
@@ -40,13 +44,14 @@ function PipelinePage() {
   const [overStage, setOverStage] = useState<PipelineStage | null>(null);
   const [dragging, setDragging] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [dateFilter, setDateFilter] = useState<DateFilter>("all");
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["projects", "pipeline"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id,name,status,notes,client_id,updated_at,repeat_interval,archived_at")
+        .select("id,name,status,notes,client_id,updated_at,repeat_interval,archived_at,start_date,due_date,delivered_at,next_occurrence_date")
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return data as ProjectRow[];
@@ -71,18 +76,27 @@ function PipelinePage() {
   const activeProjects = useMemo(() => projects.filter((p) => !p.archived_at), [projects]);
   const archivedProjects = useMemo(() => projects.filter((p) => !!p.archived_at), [projects]);
 
+  const filteredActive = useMemo(
+    () => activeProjects.filter((p) => matchesDateFilter(p.due_date, dateFilter)),
+    [activeProjects, dateFilter],
+  );
+
   const grouped = useMemo(() => {
     const map: Record<PipelineStage, ProjectRow[]> = {
       lead: [], proposal: [], active: [], review: [], delivered: [], lost: [],
     };
-    for (const p of activeProjects) {
+    for (const p of filteredActive) {
       if (p.status in map) map[p.status as PipelineStage].push(p);
     }
     return map;
-  }, [activeProjects]);
+  }, [filteredActive]);
 
   const validStages = new Set<string>(PIPELINE_STAGES.map((s) => s.id));
-  const offPipeline = activeProjects.filter((p) => !validStages.has(p.status));
+  const offPipeline = filteredActive.filter((p) => !validStages.has(p.status));
+  const overdueCount = useMemo(
+    () => activeProjects.filter((p) => (daysUntil(p.due_date) ?? 0) < 0).length,
+    [activeProjects],
+  );
 
   const move = async (projectId: string, stage: PipelineStage) => {
     const current = projects.find((p) => p.id === projectId);
@@ -92,7 +106,12 @@ function PipelinePage() {
       (old ?? []).map((p) => (p.id === projectId ? { ...p, status: stage } : p)),
     );
 
-    const { error } = await supabase.from("projects").update({ status: stage }).eq("id", projectId);
+    const nowIso = new Date().toISOString();
+    const updates: { status: PipelineStage; delivered_at?: string | null } = { status: stage };
+    if (stage === "delivered" && !current.delivered_at) updates.delivered_at = nowIso;
+    if (stage !== "delivered" && current.delivered_at) updates.delivered_at = null;
+
+    const { error } = await supabase.from("projects").update(updates).eq("id", projectId);
     if (error) {
       toast.error("Could not move project");
       qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
@@ -101,12 +120,14 @@ function PipelinePage() {
 
     // Auto-create the next occurrence when a repeating project is delivered
     if (stage === "delivered" && current.repeat_interval && current.repeat_interval !== "none") {
+      const nextDue = current.next_occurrence_date ?? null;
       const { error: cloneErr } = await supabase.from("projects").insert({
         client_id: current.client_id,
         name: current.name,
         status: "lead",
         notes: current.notes,
         repeat_interval: current.repeat_interval,
+        due_date: nextDue,
         created_by: user?.id ?? null,
       });
       if (cloneErr) {
@@ -144,6 +165,9 @@ function PipelinePage() {
         <div>
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             {activeProjects.length} active · {archivedProjects.length} archived · {offPipeline.length} off pipeline
+            {overdueCount > 0 && (
+              <> · <span className="text-destructive">{overdueCount} overdue</span></>
+            )}
           </p>
           <h1 className="mt-3 font-display text-5xl md:text-6xl font-semibold leading-[0.95] tracking-tight">
             Pipeline.
@@ -156,6 +180,33 @@ function PipelinePage() {
           <PipelineTabs current="pipeline" />
           <NewProjectButton clients={clients} />
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mr-1">Due</span>
+        {DATE_FILTERS.map((f) => {
+          const isActive = dateFilter === f.id;
+          const count =
+            f.id === "all"
+              ? activeProjects.length
+              : activeProjects.filter((p) => matchesDateFilter(p.due_date, f.id)).length;
+          return (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setDateFilter(f.id)}
+              className={`font-mono text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-full border transition inline-flex items-center gap-1.5 ${
+                isActive
+                  ? "bg-foreground text-background border-foreground"
+                  : "border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+              }`}
+            >
+              {f.id === "overdue" && <AlertTriangle className="h-3 w-3" />}
+              {f.label}
+              <span className={`tabular-nums ${isActive ? "opacity-80" : "opacity-60"}`}>{count}</span>
+            </button>
+          );
+        })}
       </div>
 
       {isLoading ? (
@@ -240,6 +291,18 @@ function PipelinePage() {
                               >
                                 {clientName.get(p.client_id) ?? "—"}
                               </Link>
+                              {(p.start_date || p.due_date || (p.status === "delivered" && p.delivered_at) || (p.repeat_interval !== "none" && p.next_occurrence_date)) && (
+                                <div className="mt-1.5 flex flex-wrap gap-1">
+                                  {p.start_date && <DatePill icon="start" date={p.start_date} />}
+                                  {p.due_date && <DatePill icon="due" date={p.due_date} />}
+                                  {p.status === "delivered" && p.delivered_at && (
+                                    <DatePill icon="delivered" date={p.delivered_at} />
+                                  )}
+                                  {p.repeat_interval !== "none" && p.next_occurrence_date && (
+                                    <DatePill icon="next" date={p.next_occurrence_date} />
+                                  )}
+                                </div>
+                              )}
                               {p.repeat_interval && p.repeat_interval !== "none" && (
                                 <div className="mt-1.5 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground border border-border rounded-full px-1.5 py-0.5">
                                   <Repeat className="h-2.5 w-2.5" /> {repeatLabel(p.repeat_interval)}
@@ -373,6 +436,9 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
   const [status, setStatus] = useState<PipelineStage>("lead");
   const [notes, setNotes] = useState("");
   const [repeatInterval, setRepeatInterval] = useState<RepeatInterval>("none");
+  const [startDate, setStartDate] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [nextOccurrenceDate, setNextOccurrenceDate] = useState("");
   const [addingClient, setAddingClient] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [creatingClient, setCreatingClient] = useState(false);
@@ -384,6 +450,9 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
     setStatus("lead");
     setNotes("");
     setRepeatInterval("none");
+    setStartDate("");
+    setDueDate("");
+    setNextOccurrenceDate("");
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -398,12 +467,17 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
       return;
     }
     setSaving(true);
+    const stamp = status === "delivered" ? new Date().toISOString() : null;
     const { error } = await supabase.from("projects").insert({
       client_id: clientId,
       name: name.trim(),
       status,
       notes: notes.trim() || null,
       repeat_interval: repeatInterval,
+      start_date: startDate || null,
+      due_date: dueDate || null,
+      next_occurrence_date: repeatInterval === "none" ? null : nextOccurrenceDate || null,
+      delivered_at: stamp,
       created_by: user.id,
     });
     setSaving(false);
@@ -530,6 +604,43 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
               Repeating projects auto-queue a fresh Lead when moved to Delivered.
             </p>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="np-start" className="text-xs">Start date</Label>
+              <Input
+                id="np-start"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="mt-1.5 h-10"
+              />
+            </div>
+            <div>
+              <Label htmlFor="np-due" className="text-xs">Due date</Label>
+              <Input
+                id="np-due"
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="mt-1.5 h-10"
+              />
+            </div>
+          </div>
+          {repeatInterval !== "none" && (
+            <div>
+              <Label htmlFor="np-next" className="text-xs">Next occurrence date</Label>
+              <Input
+                id="np-next"
+                type="date"
+                value={nextOccurrenceDate}
+                onChange={(e) => setNextOccurrenceDate(e.target.value)}
+                className="mt-1.5 h-10"
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Used as the due date for the next auto-queued occurrence.
+              </p>
+            </div>
+          )}
           <div>
             <Label htmlFor="np-notes" className="text-xs">Notes (optional)</Label>
             <Textarea
@@ -549,3 +660,49 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
     </Dialog>
   );
 }
+
+function DatePill({ icon, date }: { icon: "start" | "due" | "delivered" | "next"; date: string }) {
+  const isDue = icon === "due";
+  const days = isDue ? daysUntil(date) : null;
+  const overdue = isDue && days !== null && days < 0;
+  const soon = isDue && days !== null && days >= 0 && days <= 3;
+
+  const Icon =
+    icon === "start" ? CalendarDays :
+    icon === "due" ? CalendarClock :
+    icon === "delivered" ? CalendarCheck2 :
+    Repeat;
+
+  const label =
+    icon === "start" ? "Start" :
+    icon === "due" ? "Due" :
+    icon === "delivered" ? "Delivered" :
+    "Next";
+
+  const cls = overdue
+    ? "border-destructive/40 bg-destructive/10 text-destructive"
+    : soon
+      ? "border-foreground/40 bg-paper-soft text-foreground"
+      : "border-border text-muted-foreground";
+
+  const display = icon === "delivered"
+    ? new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : formatShortDate(date);
+
+  return (
+    <span
+      title={
+        icon === "due" && days !== null
+          ? overdue ? `Overdue by ${Math.abs(days)}d` : `Due in ${days}d`
+          : undefined
+      }
+      className={`inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest border rounded-full px-1.5 py-0.5 ${cls}`}
+    >
+      <Icon className="h-2.5 w-2.5" />
+      {label} · {display}
+      {overdue && <AlertTriangle className="h-2.5 w-2.5" />}
+    </span>
+  );
+}
+
+
