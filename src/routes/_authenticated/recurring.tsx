@@ -434,28 +434,46 @@ function RecurringDashboard() {
                               {s.occurrences}
                             </td>
                             <td className="px-4 py-3 text-right">
-                              <button
-                                type="button"
-                                onClick={() => markDelivered(s)}
-                                className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest px-2.5 py-1.5 rounded-md border border-border hover:border-foreground hover:bg-paper-soft transition"
-                                title={
-                                  s.nextDate
-                                    ? s.current
-                                      ? `Deliver current and queue next lead due ${formatShortDate(s.nextDate)}`
-                                      : `Queue next lead due ${formatShortDate(s.nextDate)}`
-                                    : s.current
-                                      ? "Mark current occurrence delivered and queue next (no next date set)"
-                                      : "Queue next occurrence as a lead (no next date set)"
-                                }
-                              >
-                                <CheckCircle2 className="h-3 w-3" />
-                                {s.current ? "Deliver + queue" : "Queue next"}
-                                {s.nextDate && (
-                                  <span className="text-muted-foreground normal-case tracking-normal">
-                                    → {formatShortDate(s.nextDate)}
-                                  </span>
-                                )}
-                              </button>
+                              <div className="inline-flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => markDelivered(s)}
+                                  className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest px-2.5 py-1.5 rounded-md border border-border hover:border-foreground hover:bg-paper-soft transition"
+                                  title={
+                                    s.nextDate
+                                      ? s.current
+                                        ? `Deliver current and queue next lead due ${formatShortDate(s.nextDate)}`
+                                        : `Queue next lead due ${formatShortDate(s.nextDate)}`
+                                      : s.current
+                                        ? "Mark current occurrence delivered and queue next (no next date set)"
+                                        : "Queue next occurrence as a lead (no next date set)"
+                                  }
+                                >
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  {s.current ? "Deliver + queue" : "Queue next"}
+                                  {s.nextDate && (
+                                    <span className="text-muted-foreground normal-case tracking-normal">
+                                      → {formatShortDate(s.nextDate)}
+                                    </span>
+                                  )}
+                                </button>
+                                <DeleteProjectButton
+                                  projectIds={s.allIds}
+                                  projectName={s.name}
+                                  clientId={s.clientId}
+                                  description={`This permanently removes all ${s.allIds.length} project${s.allIds.length === 1 ? "" : "s"} in this recurring series (current, work in progress, and delivered occurrences), including any linked credentials, notes, and conversations. This cannot be undone.`}
+                                  trigger={
+                                    <button
+                                      type="button"
+                                      className="inline-flex items-center justify-center p-1.5 rounded-md border border-border text-muted-foreground hover:text-destructive hover:border-destructive/40 transition"
+                                      title="Delete recurring series"
+                                      aria-label="Delete recurring series"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
+                                  }
+                                />
+                              </div>
                             </td>
                           </tr>
                         );
