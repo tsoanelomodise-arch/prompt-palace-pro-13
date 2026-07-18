@@ -107,7 +107,7 @@ function PipelinePage() {
     );
 
     const nowIso = new Date().toISOString();
-    const updates: Record<string, unknown> = { status: stage };
+    const updates: { status: PipelineStage; delivered_at?: string | null } = { status: stage };
     if (stage === "delivered" && !current.delivered_at) updates.delivered_at = nowIso;
     if (stage !== "delivered" && current.delivered_at) updates.delivered_at = null;
 
