@@ -25,6 +25,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 import { useAutosave } from "@/hooks/use-autosave";
 import { SaveStatus } from "@/components/ui/save-status";
+import { DeleteProjectButton } from "@/components/DeleteProjectButton";
 
 export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   component: ClientDetail,
