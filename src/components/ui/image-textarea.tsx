@@ -139,22 +139,6 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
       onValueChange(next);
     };
 
-    const insertAtCursor = (snippet: string) => {
-      const el = innerRef.current;
-      if (!el) {
-        onValueChange(displayToReal(displayValue + snippet));
-        return;
-      }
-      const start = el.selectionStart ?? displayValue.length;
-      const end = el.selectionEnd ?? displayValue.length;
-      const nextDisplay = displayValue.slice(0, start) + snippet + displayValue.slice(end);
-      onValueChange(displayToReal(nextDisplay));
-      requestAnimationFrame(() => {
-        el.focus();
-        const pos = start + snippet.length;
-        el.setSelectionRange(pos, pos);
-      });
-    };
 
 
     // ---------- @-mention reference picker ----------
