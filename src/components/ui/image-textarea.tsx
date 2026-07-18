@@ -460,28 +460,54 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
               {images.map((img, i) => (
                 <div
                   key={`${img.url.slice(0, 32)}-${i}`}
-                  className="group relative h-32 w-32 overflow-hidden rounded-md border border-border bg-muted shadow-sm"
-                  title={img.alt || "image"}
+                  className="flex flex-col gap-1"
                 >
-                  <button
-                    type="button"
-                    onClick={() => setLightbox({ url: img.url, alt: img.alt })}
-                    className="block h-full w-full"
+                  <div
+                    className="group relative h-32 w-32 overflow-hidden rounded-md border border-border bg-muted shadow-sm"
+                    title={img.alt || "image"}
                   >
-                    <img
-                      src={img.url}
-                      alt={img.alt}
-                      className="h-full w-full object-cover transition group-hover:scale-105"
-                    />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removeImage(img.match)}
-                    className="absolute right-1 top-1 rounded-full bg-background/90 p-1 text-foreground opacity-0 shadow transition group-hover:opacity-100"
-                    aria-label="Remove image"
+                    <button
+                      type="button"
+                      onClick={() => setLightbox({ url: img.url, alt: img.alt })}
+                      className="block h-full w-full"
+                    >
+                      <img
+                        src={img.url}
+                        alt={img.alt}
+                        className="h-full w-full object-cover transition group-hover:scale-105"
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeImage(img.match)}
+                      className="absolute right-1 top-1 rounded-full bg-background/90 p-1 text-foreground opacity-0 shadow transition group-hover:opacity-100"
+                      aria-label="Remove image"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div
+                    className="flex w-32 items-center gap-0.5 rounded border border-border bg-background p-0.5"
+                    role="group"
+                    aria-label="Image size"
                   >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
+                    {IMAGE_SIZES.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setImageSize(img.match, s)}
+                        title={`Set size: ${s}`}
+                        className={cn(
+                          "flex-1 rounded px-1 py-0.5 text-[10px] font-mono uppercase tracking-widest transition",
+                          img.size === s
+                            ? "bg-foreground text-background"
+                            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                        )}
+                      >
+                        {SIZE_LABEL[s]}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
