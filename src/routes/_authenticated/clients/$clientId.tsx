@@ -880,6 +880,7 @@ function NotesPane({ clientId }: { clientId: string }) {
   const qc = useQueryClient();
   const { user } = useAuth();
   const [body, setBody] = useState("");
+  const [draftId, setDraftId] = useState<string | null>(null);
 
   const { data: notes = [] } = useQuery({
     queryKey: ["client-notes", clientId],
@@ -894,32 +895,57 @@ function NotesPane({ clientId }: { clientId: string }) {
     },
   });
 
-  const add = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !body.trim()) return;
-    const { error } = await supabase.from("client_notes").insert({
-      client_id: clientId, body: body.trim(), created_by: user.id,
-    });
-    if (error) return toast.error(error.message);
-    setBody("");
+  const persist = async (text: string) => {
+    if (!user) return;
+    const trimmed = text.trim();
+    if (!trimmed) {
+      if (draftId) {
+        await supabase.from("client_notes").delete().eq("id", draftId);
+        setDraftId(null);
+        qc.invalidateQueries({ queryKey: ["client-notes", clientId] });
+      }
+      return;
+    }
+    if (!draftId) {
+      const { data, error } = await supabase
+        .from("client_notes")
+        .insert({ client_id: clientId, body: trimmed, created_by: user.id })
+        .select("id")
+        .single();
+      if (error) throw error;
+      setDraftId(data.id);
+    } else {
+      const { error } = await supabase.from("client_notes").update({ body: trimmed }).eq("id", draftId);
+      if (error) throw error;
+    }
     qc.invalidateQueries({ queryKey: ["client-notes", clientId] });
+  };
+
+  const autosave = useAutosave(body, persist, { enabled: !!user });
+
+  const finish = () => {
+    setBody("");
+    setDraftId(null);
   };
 
   return (
     <div className="max-w-3xl">
-      <form onSubmit={add} className="mb-6">
+      <div className="mb-6">
         <ImageTextarea
           value={body}
           onValueChange={setBody}
           placeholder="Log a call, meeting, or quick update…"
           className="min-h-[100px]"
         />
-        <div className="mt-2 flex justify-end">
-          <Button type="submit" disabled={!body.trim()}>Add note</Button>
+        <div className="mt-2 flex items-center justify-between">
+          <SaveStatus status={autosave.status} />
+          <Button size="sm" variant="ghost" onClick={finish} disabled={!body.trim()}>
+            New note
+          </Button>
         </div>
-      </form>
+      </div>
       {notes.length === 0 ? (
-        <EmptyTab icon={<StickyNote className="h-8 w-8" />} title="No notes yet" hint="Activity log starts the moment you add one." />
+        <EmptyTab icon={<StickyNote className="h-8 w-8" />} title="No notes yet" hint="Activity log starts the moment you type." />
       ) : (
         <ol className="relative border-l border-border pl-6 space-y-6">
           {notes.map((n) => (
@@ -936,6 +962,7 @@ function NotesPane({ clientId }: { clientId: string }) {
     </div>
   );
 }
+
 
 function EmptyTab({ icon, title, hint }: { icon: React.ReactNode; title: string; hint: string }) {
   return (
