@@ -385,7 +385,7 @@ function ProjectsPane({ clientId }: { clientId: string }) {
                   />
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{p.status}</span>
-                    <DeleteProjectButton projectIds={p.id} projectName={p.name} clientId={p.id ? undefined : undefined} />
+                    <DeleteProjectButton projectIds={p.id} projectName={p.name} clientId={clientId} />
                   </div>
                 </div>
                 {p.notes && <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{p.notes}</p>}
