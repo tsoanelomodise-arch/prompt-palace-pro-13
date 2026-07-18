@@ -126,7 +126,7 @@ function Toolbar({ editor, onPickImage }: { editor: Editor; onPickImage: (file: 
 
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 border-b border-border px-2 py-1.5 bg-paper">
+    <div className="sticky top-16 z-20 flex flex-wrap items-center gap-0.5 border-b border-border px-2 py-1.5 bg-paper shadow-sm">
       <ToolButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
         <Bold className="h-3.5 w-3.5" />
       </ToolButton>
