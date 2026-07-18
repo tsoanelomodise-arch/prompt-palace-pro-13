@@ -194,9 +194,7 @@ function PageEdit() {
               {content.trim() === "" ? (
                 <p className="text-sm text-muted-foreground italic">Nothing to preview yet.</p>
               ) : (
-                <div className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-display prose-headings:font-semibold prose-pre:bg-paper-soft prose-pre:border prose-pre:border-border">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-                </div>
+                <Markdown className="text-base">{content}</Markdown>
               )}
             </div>
           )}
