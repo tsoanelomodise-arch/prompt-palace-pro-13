@@ -44,13 +44,14 @@ function PipelinePage() {
   const [overStage, setOverStage] = useState<PipelineStage | null>(null);
   const [dragging, setDragging] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [dateFilter, setDateFilter] = useState<DateFilter>("all");
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["projects", "pipeline"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id,name,status,notes,client_id,updated_at,repeat_interval,archived_at")
+        .select("id,name,status,notes,client_id,updated_at,repeat_interval,archived_at,start_date,due_date,delivered_at,next_occurrence_date")
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return data as ProjectRow[];
