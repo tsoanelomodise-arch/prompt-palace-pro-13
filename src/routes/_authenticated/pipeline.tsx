@@ -291,6 +291,18 @@ function PipelinePage() {
                               >
                                 {clientName.get(p.client_id) ?? "—"}
                               </Link>
+                              {(p.start_date || p.due_date || (p.status === "delivered" && p.delivered_at) || (p.repeat_interval !== "none" && p.next_occurrence_date)) && (
+                                <div className="mt-1.5 flex flex-wrap gap-1">
+                                  {p.start_date && <DatePill icon="start" date={p.start_date} />}
+                                  {p.due_date && <DatePill icon="due" date={p.due_date} />}
+                                  {p.status === "delivered" && p.delivered_at && (
+                                    <DatePill icon="delivered" date={p.delivered_at} />
+                                  )}
+                                  {p.repeat_interval !== "none" && p.next_occurrence_date && (
+                                    <DatePill icon="next" date={p.next_occurrence_date} />
+                                  )}
+                                </div>
+                              )}
                               {p.repeat_interval && p.repeat_interval !== "none" && (
                                 <div className="mt-1.5 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground border border-border rounded-full px-1.5 py-0.5">
                                   <Repeat className="h-2.5 w-2.5" /> {repeatLabel(p.repeat_interval)}
