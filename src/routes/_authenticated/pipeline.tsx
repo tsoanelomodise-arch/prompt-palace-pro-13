@@ -14,6 +14,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
 import { ProjectDatesPopover } from "@/components/ProjectDatesPopover";
+import { DeleteProjectButton } from "@/components/DeleteProjectButton";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/pipeline")({
