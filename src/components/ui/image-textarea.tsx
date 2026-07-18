@@ -224,11 +224,11 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
     };
 
     const onTextareaChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
-      const next = e.target.value;
-      onValueChange(next);
-      const caret = e.target.selectionStart ?? next.length;
+      const displayed = e.target.value;
+      onValueChange(displayToReal(displayed));
+      const caret = e.target.selectionStart ?? displayed.length;
       // Look back from the caret for the most recent '@' that starts a token.
-      const upto = next.slice(0, caret);
+      const upto = displayed.slice(0, caret);
       const m = upto.match(/(?:^|\s)@([\w-]{0,40})$/);
       if (m) {
         const query = m[1];
