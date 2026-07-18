@@ -10,10 +10,11 @@ import {
   type PipelineStage,
   type RepeatInterval,
 } from "@/lib/pipeline";
-import { Repeat, CheckCircle2, KanbanSquare, Briefcase, CalendarClock, AlertTriangle } from "lucide-react";
+import { Repeat, CheckCircle2, KanbanSquare, Briefcase, CalendarClock, AlertTriangle, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow, format } from "date-fns";
 import { daysUntil, formatShortDate } from "@/lib/pipeline";
+import { ProjectDatesPopover } from "@/components/ProjectDatesPopover";
 
 export const Route = createFileRoute("/_authenticated/recurring")({
   component: RecurringDashboard,
@@ -318,8 +319,9 @@ function RecurringDashboard() {
                               )}
                             </td>
                             <td className="px-4 py-3">
-                              {s.nextDate ? (
-                                (() => {
+                              {(() => {
+                                const target = s.current ?? s.wip[0] ?? null;
+                                const pill = s.nextDate ? (() => {
                                   const d = daysUntil(s.nextDate);
                                   const overdue = d !== null && d < 0;
                                   return (
@@ -332,14 +334,25 @@ function RecurringDashboard() {
                                       }`}
                                     >
                                       <CalendarClock className="h-2.5 w-2.5" />
-                                      {formatShortDate(s.nextDate)}
+                                      {formatShortDate(s.nextDate!)}
                                       {overdue && <AlertTriangle className="h-2.5 w-2.5" />}
                                     </span>
                                   );
-                                })()
-                              ) : (
-                                <span className="text-muted-foreground/60">—</span>
-                              )}
+                                })() : (
+                                  <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest border border-dashed border-border rounded-full px-2 py-0.5 text-muted-foreground hover:text-foreground hover:border-foreground">
+                                    <CalendarPlus className="h-2.5 w-2.5" /> Set date
+                                  </span>
+                                );
+                                return target ? (
+                                  <ProjectDatesPopover
+                                    project={target}
+                                    align="start"
+                                    trigger={<button type="button" className="cursor-pointer">{pill}</button>}
+                                  />
+                                ) : (
+                                  <span className="text-muted-foreground/60">—</span>
+                                );
+                              })()}
                             </td>
                             <td className="px-4 py-3">
                               {s.wip.length === 0 ? (
@@ -351,33 +364,50 @@ function RecurringDashboard() {
                                     const dd = daysUntil(w.due_date);
                                     const wOverdue = dd !== null && dd < 0;
                                     return (
-                                      <button
-                                        key={w.id}
-                                        type="button"
-                                        onClick={() =>
-                                          router.navigate({
-                                            to: "/clients/$clientId",
-                                            params: { clientId: w.client_id },
-                                            hash: "projects",
-                                          })
-                                        }
-                                        title={`Updated ${formatDistanceToNow(new Date(w.updated_at), { addSuffix: true })}${w.due_date ? ` · Due ${formatShortDate(w.due_date)}` : ""}`}
-                                        className="inline-flex items-center gap-1"
-                                      >
-                                        {wm && <StagePill stage={wm.id} label={wm.label} />}
-                                        {w.due_date && (
-                                          <span
-                                            className={`inline-flex items-center gap-0.5 font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${
-                                              wOverdue
-                                                ? "border-destructive/40 bg-destructive/10 text-destructive"
-                                                : "border-border text-muted-foreground"
-                                            }`}
-                                          >
-                                            <CalendarClock className="h-2.5 w-2.5" />
-                                            {formatShortDate(w.due_date)}
-                                          </span>
-                                        )}
-                                      </button>
+                                      <span key={w.id} className="inline-flex items-center gap-1">
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            router.navigate({
+                                              to: "/clients/$clientId",
+                                              params: { clientId: w.client_id },
+                                              hash: "projects",
+                                            })
+                                          }
+                                          title={`Updated ${formatDistanceToNow(new Date(w.updated_at), { addSuffix: true })}${w.due_date ? ` · Due ${formatShortDate(w.due_date)}` : ""}`}
+                                          className="inline-flex items-center gap-1"
+                                        >
+                                          {wm && <StagePill stage={wm.id} label={wm.label} />}
+                                        </button>
+                                        <ProjectDatesPopover
+                                          project={w}
+                                          align="start"
+                                          trigger={
+                                            <button
+                                              type="button"
+                                              className={`inline-flex items-center gap-0.5 font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border cursor-pointer hover:border-foreground ${
+                                                w.due_date
+                                                  ? wOverdue
+                                                    ? "border-destructive/40 bg-destructive/10 text-destructive"
+                                                    : "border-border text-muted-foreground"
+                                                  : "border-dashed border-border text-muted-foreground"
+                                              }`}
+                                              title="Edit dates"
+                                            >
+                                              {w.due_date ? (
+                                                <>
+                                                  <CalendarClock className="h-2.5 w-2.5" />
+                                                  {formatShortDate(w.due_date)}
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <CalendarPlus className="h-2.5 w-2.5" /> Date
+                                                </>
+                                              )}
+                                            </button>
+                                          }
+                                        />
+                                      </span>
                                     );
                                   })}
                                   <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground self-center">

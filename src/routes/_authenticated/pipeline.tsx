@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PIPELINE_STAGES, REPEAT_INTERVALS, repeatLabel, DATE_FILTERS, matchesDateFilter, daysUntil, formatShortDate, type PipelineStage, type RepeatInterval, type DateFilter } from "@/lib/pipeline";
 import { PipelineTabs } from "./recurring";
-import { GripVertical, Briefcase, Plus, Repeat, Archive, ArchiveRestore, ChevronDown, ChevronRight, CalendarClock, CalendarCheck2, CalendarDays, AlertTriangle } from "lucide-react";
+import { GripVertical, Briefcase, Plus, Repeat, Archive, ArchiveRestore, ChevronDown, ChevronRight, CalendarClock, CalendarCheck2, CalendarDays, AlertTriangle, CalendarPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
+import { ProjectDatesPopover } from "@/components/ProjectDatesPopover";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/pipeline")({
@@ -312,15 +313,31 @@ function PipelinePage() {
                                 <p className="mt-1.5 text-[11px] text-muted-foreground line-clamp-2">{p.notes}</p>
                               )}
                             </div>
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); setArchived(p.id, true); }}
-                              className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-foreground shrink-0"
-                              title="Archive"
-                              aria-label="Archive project"
-                            >
-                              <Archive className="h-3.5 w-3.5" />
-                            </button>
+                            <div className="flex flex-col items-center gap-1 shrink-0">
+                              <ProjectDatesPopover
+                                project={p}
+                                trigger={
+                                  <button
+                                    type="button"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-foreground"
+                                    title="Edit dates"
+                                    aria-label="Edit project dates"
+                                  >
+                                    <CalendarPlus className="h-3.5 w-3.5" />
+                                  </button>
+                                }
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setArchived(p.id, true); }}
+                                className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-foreground"
+                                title="Archive"
+                                aria-label="Archive project"
+                              >
+                                <Archive className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))
