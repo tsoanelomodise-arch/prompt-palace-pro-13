@@ -364,33 +364,50 @@ function RecurringDashboard() {
                                     const dd = daysUntil(w.due_date);
                                     const wOverdue = dd !== null && dd < 0;
                                     return (
-                                      <button
-                                        key={w.id}
-                                        type="button"
-                                        onClick={() =>
-                                          router.navigate({
-                                            to: "/clients/$clientId",
-                                            params: { clientId: w.client_id },
-                                            hash: "projects",
-                                          })
-                                        }
-                                        title={`Updated ${formatDistanceToNow(new Date(w.updated_at), { addSuffix: true })}${w.due_date ? ` · Due ${formatShortDate(w.due_date)}` : ""}`}
-                                        className="inline-flex items-center gap-1"
-                                      >
-                                        {wm && <StagePill stage={wm.id} label={wm.label} />}
-                                        {w.due_date && (
-                                          <span
-                                            className={`inline-flex items-center gap-0.5 font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${
-                                              wOverdue
-                                                ? "border-destructive/40 bg-destructive/10 text-destructive"
-                                                : "border-border text-muted-foreground"
-                                            }`}
-                                          >
-                                            <CalendarClock className="h-2.5 w-2.5" />
-                                            {formatShortDate(w.due_date)}
-                                          </span>
-                                        )}
-                                      </button>
+                                      <span key={w.id} className="inline-flex items-center gap-1">
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            router.navigate({
+                                              to: "/clients/$clientId",
+                                              params: { clientId: w.client_id },
+                                              hash: "projects",
+                                            })
+                                          }
+                                          title={`Updated ${formatDistanceToNow(new Date(w.updated_at), { addSuffix: true })}${w.due_date ? ` · Due ${formatShortDate(w.due_date)}` : ""}`}
+                                          className="inline-flex items-center gap-1"
+                                        >
+                                          {wm && <StagePill stage={wm.id} label={wm.label} />}
+                                        </button>
+                                        <ProjectDatesPopover
+                                          project={w}
+                                          align="start"
+                                          trigger={
+                                            <button
+                                              type="button"
+                                              className={`inline-flex items-center gap-0.5 font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border cursor-pointer hover:border-foreground ${
+                                                w.due_date
+                                                  ? wOverdue
+                                                    ? "border-destructive/40 bg-destructive/10 text-destructive"
+                                                    : "border-border text-muted-foreground"
+                                                  : "border-dashed border-border text-muted-foreground"
+                                              }`}
+                                              title="Edit dates"
+                                            >
+                                              {w.due_date ? (
+                                                <>
+                                                  <CalendarClock className="h-2.5 w-2.5" />
+                                                  {formatShortDate(w.due_date)}
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <CalendarPlus className="h-2.5 w-2.5" /> Date
+                                                </>
+                                              )}
+                                            </button>
+                                          }
+                                        />
+                                      </span>
                                     );
                                   })}
                                   <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground self-center">
