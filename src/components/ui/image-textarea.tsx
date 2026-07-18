@@ -294,7 +294,7 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
       try {
         for (const f of imgs) {
           try {
-            const url = await fileToDataUrl(f);
+            const url = await uploadImage(f);
             const alt = f.name.replace(/\.[^.]+$/, "") || "image";
             insertAtCursor(`\n\n![${alt}](${url})\n\n`);
             added++;
