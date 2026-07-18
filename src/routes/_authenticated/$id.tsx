@@ -255,16 +255,13 @@ function PromptDetail() {
             <Label>Description</Label>
             <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="mt-1.5 h-11" />
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <Label>Category</Label>
-              <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="mt-1.5 h-11" />
-            </div>
-            <div>
-              <Label>Tags</Label>
-              <Input value={form.tagsRaw} onChange={(e) => setForm({ ...form, tagsRaw: e.target.value })} className="mt-1.5 h-11" />
-            </div>
-          </div>
+          <PromptTaxonomyFields
+            category={form.category}
+            tagsRaw={form.tagsRaw}
+            onCategoryChange={(v) => setForm({ ...form, category: v })}
+            onTagsRawChange={(v) => setForm({ ...form, tagsRaw: v })}
+            excludeId={id}
+          />
           <div>
             <Label>Prompt</Label>
             <ImageTextarea value={form.content} onValueChange={(v) => setForm({ ...form, content: v })} className="mt-1.5 font-mono text-sm min-h-[320px]" />
