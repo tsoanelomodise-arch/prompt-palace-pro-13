@@ -318,6 +318,30 @@ function RecurringDashboard() {
                               )}
                             </td>
                             <td className="px-4 py-3">
+                              {s.nextDate ? (
+                                (() => {
+                                  const d = daysUntil(s.nextDate);
+                                  const overdue = d !== null && d < 0;
+                                  return (
+                                    <span
+                                      title={overdue ? `Overdue by ${Math.abs(d!)}d` : d !== null ? `In ${d}d` : undefined}
+                                      className={`inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest border rounded-full px-2 py-0.5 ${
+                                        overdue
+                                          ? "border-destructive/40 bg-destructive/10 text-destructive"
+                                          : "border-border text-foreground bg-paper-soft"
+                                      }`}
+                                    >
+                                      <CalendarClock className="h-2.5 w-2.5" />
+                                      {formatShortDate(s.nextDate)}
+                                      {overdue && <AlertTriangle className="h-2.5 w-2.5" />}
+                                    </span>
+                                  );
+                                })()
+                              ) : (
+                                <span className="text-muted-foreground/60">—</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
                               {s.wip.length === 0 ? (
                                 <span className="text-muted-foreground/60">—</span>
                               ) : (
