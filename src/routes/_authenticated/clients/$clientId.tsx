@@ -25,6 +25,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 import { useAutosave } from "@/hooks/use-autosave";
 import { SaveStatus } from "@/components/ui/save-status";
+import { DeleteProjectButton } from "@/components/DeleteProjectButton";
 
 export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   component: ClientDetail,
@@ -382,7 +383,10 @@ function ProjectsPane({ clientId }: { clientId: string }) {
                     name={p.name}
                     onSave={(next) => renameProject(p.id, next)}
                   />
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground shrink-0">{p.status}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{p.status}</span>
+                    <DeleteProjectButton projectIds={p.id} projectName={p.name} clientId={clientId} />
+                  </div>
                 </div>
                 {p.notes && <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{p.notes}</p>}
               </div>

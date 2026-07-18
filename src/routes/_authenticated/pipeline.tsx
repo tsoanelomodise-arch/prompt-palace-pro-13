@@ -14,6 +14,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
 import { ProjectDatesPopover } from "@/components/ProjectDatesPopover";
+import { DeleteProjectButton } from "@/components/DeleteProjectButton";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/pipeline")({
@@ -456,6 +458,22 @@ function PipelinePage() {
                               >
                                 <Archive className="h-3.5 w-3.5" />
                               </button>
+                              <DeleteProjectButton
+                                projectIds={p.id}
+                                projectName={p.name}
+                                clientId={p.client_id}
+                                trigger={
+                                  <button
+                                    type="button"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive"
+                                    title="Delete project"
+                                    aria-label="Delete project"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                }
+                              />
                             </div>
                           </div>
                         </div>
@@ -534,15 +552,32 @@ function PipelinePage() {
                           {clientName.get(p.client_id) ?? "—"} · {p.status}
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setArchived(p.id, false)}
-                        className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-foreground shrink-0"
-                        title="Restore"
-                        aria-label="Restore project"
-                      >
-                        <ArchiveRestore className="h-3.5 w-3.5" />
-                      </button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setArchived(p.id, false)}
+                          className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-foreground"
+                          title="Restore"
+                          aria-label="Restore project"
+                        >
+                          <ArchiveRestore className="h-3.5 w-3.5" />
+                        </button>
+                        <DeleteProjectButton
+                          projectIds={p.id}
+                          projectName={p.name}
+                          clientId={p.client_id}
+                          trigger={
+                            <button
+                              type="button"
+                              className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive"
+                              title="Delete project"
+                              aria-label="Delete project"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          }
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
