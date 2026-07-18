@@ -103,10 +103,11 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
     // Parse out image markdown entries for inline thumbnails.
     const images = useMemo(() => {
       const re = /!\[([^\]]*)\]\(([^)\s]+)\)/g;
-      const out: { alt: string; url: string; match: string }[] = [];
+      const out: { alt: string; url: string; match: string; size: ImageSize }[] = [];
       let m: RegExpExecArray | null;
       while ((m = re.exec(value)) !== null) {
-        out.push({ alt: m[1], url: m[2], match: m[0] });
+        const { alt, size } = parseImageAlt(m[1]);
+        out.push({ alt, url: m[2], match: m[0], size });
       }
       return out;
     }, [value]);
