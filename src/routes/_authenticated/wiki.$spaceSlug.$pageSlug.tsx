@@ -11,8 +11,7 @@ import {
 import { toast } from "sonner";
 import { Pencil, Trash2, Clock, Copy } from "lucide-react";
 import { slugify } from "@/lib/wiki";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { Markdown } from "@/components/ui/markdown";
 import { formatDistanceToNow } from "date-fns";
 import { LinkedEntities } from "@/components/wiki/LinkedEntities";
 
