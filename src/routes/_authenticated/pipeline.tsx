@@ -99,6 +99,22 @@ function PipelinePage() {
     [activeProjects],
   );
 
+  const wipItems = useMemo(
+    () =>
+      filteredActive
+        .filter((p) => p.status === "active" || p.status === "review")
+        .sort((a, b) => {
+          const ad = daysUntil(a.due_date);
+          const bd = daysUntil(b.due_date);
+          if (ad === null && bd === null) return 0;
+          if (ad === null) return 1;
+          if (bd === null) return -1;
+          return ad - bd;
+        }),
+    [filteredActive],
+  );
+  const wipOverdue = wipItems.filter((p) => (daysUntil(p.due_date) ?? 0) < 0).length;
+
   const move = async (projectId: string, stage: PipelineStage) => {
     const current = projects.find((p) => p.id === projectId);
     if (!current || current.status === stage) return;
