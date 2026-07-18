@@ -408,41 +408,6 @@ function ImplementationPage() {
         </div>
       )}
 
-      {/* Add existing project */}
-      <div className="mt-10 border-t border-border pt-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-lg font-semibold">Add project to implementation</h2>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            {candidateProjects.length} available
-          </span>
-        </div>
-        {candidateProjects.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            All active projects are already on the board. Create one from{" "}
-            <Link to="/pipeline" className="underline">Pipeline</Link>.
-          </p>
-        ) : (
-          <div className="flex items-center gap-2 max-w-xl">
-            <Select
-              onValueChange={(v) => addToImplementation(v)}
-              value=""
-            >
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Pick a project to start implementing…" />
-              </SelectTrigger>
-              <SelectContent className="max-h-[300px]">
-                {candidateProjects.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name} · {clientName.get(p.client_id) ?? "—"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Plus className="h-4 w-4 text-muted-foreground" />
-          </div>
-        )}
-      </div>
-
       {void user}
     </div>
   );
