@@ -100,7 +100,7 @@ function ToolButton({ onClick, active, disabled, title, children }: ToolButtonPr
   );
 }
 
-function Toolbar({ editor }: { editor: Editor }) {
+function Toolbar({ editor, onPickImage }: { editor: Editor; onPickImage: (file: File) => void }) {
   const promptLink = useCallback(() => {
     const prev = editor.getAttributes("link").href as string | undefined;
     const url = window.prompt("URL", prev ?? "https://");
@@ -112,22 +112,18 @@ function Toolbar({ editor }: { editor: Editor }) {
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
   }, [editor]);
 
-  const insertImage = useCallback(async () => {
+  const insertImage = useCallback(() => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
-    input.onchange = async () => {
+    input.onchange = () => {
       const file = input.files?.[0];
       if (!file) return;
-      try {
-        const url = await uploadImage(file);
-        editor.chain().focus().setImage({ src: url }).run();
-      } catch (e: any) {
-        toast.error(e?.message ?? "Upload failed");
-      }
+      onPickImage(file);
     };
     input.click();
-  }, [editor]);
+  }, [onPickImage]);
+
 
   return (
     <div className="flex flex-wrap items-center gap-0.5 border-b border-border px-2 py-1.5 bg-paper">
