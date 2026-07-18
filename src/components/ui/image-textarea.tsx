@@ -147,6 +147,11 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
       onValueChange(next);
     };
 
+    const setImageSize = (match: string, size: ImageSize) => {
+      const next = value.replace(match, rewriteImageMarkdownSize(match, size));
+      onValueChange(next);
+    };
+
 
 
     // ---------- @-mention reference picker ----------
