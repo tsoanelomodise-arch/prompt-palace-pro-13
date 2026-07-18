@@ -1,8 +1,15 @@
-import { createFileRoute, Outlet, redirect, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { BookMarked, LogOut, Users, Library, Shield, BookOpen, KanbanSquare, Repeat, KeyRound } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import { BookMarked, LogOut, Users, Library, Shield, BookOpen, KanbanSquare, Repeat, KeyRound, ChevronDown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
@@ -39,8 +46,7 @@ function AuthLayout() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-1 ml-4">
-            <NavLink to="/pipeline" icon={<KanbanSquare className="h-3.5 w-3.5" />}>Pipeline</NavLink>
-            <NavLink to="/recurring" icon={<Repeat className="h-3.5 w-3.5" />}>Recurring</NavLink>
+            <PipelineGroup />
             <NavLink to="/clients" icon={<Users className="h-3.5 w-3.5" />}>Clients</NavLink>
             <NavLink to="/logins" icon={<KeyRound className="h-3.5 w-3.5" />}>Logins</NavLink>
             <NavLink to="/" icon={<Library className="h-3.5 w-3.5" />}>Prompts</NavLink>
@@ -66,8 +72,7 @@ function AuthLayout() {
         </div>
         {/* Mobile nav */}
         <nav className="md:hidden flex items-center gap-1 px-6 pb-3 -mt-1 overflow-x-auto">
-          <NavLink to="/pipeline" icon={<KanbanSquare className="h-3.5 w-3.5" />}>Pipeline</NavLink>
-          <NavLink to="/recurring" icon={<Repeat className="h-3.5 w-3.5" />}>Recurring</NavLink>
+          <PipelineGroup />
           <NavLink to="/clients" icon={<Users className="h-3.5 w-3.5" />}>Clients</NavLink>
           <NavLink to="/logins" icon={<KeyRound className="h-3.5 w-3.5" />}>Logins</NavLink>
           <NavLink to="/" icon={<Library className="h-3.5 w-3.5" />}>Prompts</NavLink>
@@ -106,5 +111,49 @@ function NavLink({
       {icon}
       {children}
     </Link>
+  );
+}
+
+function PipelineGroup() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const items = [
+    { to: "/pipeline", icon: <KanbanSquare className="h-3.5 w-3.5" />, label: "Pipeline" },
+    { to: "/recurring", icon: <Repeat className="h-3.5 w-3.5" />, label: "Recurring" },
+  ];
+  const isActive = items.some((i) => (i.to === "/" ? pathname === "/" : pathname.startsWith(i.to)));
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className={cn(
+            "flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-widest px-3 py-1.5 rounded-md transition",
+            isActive
+              ? "text-foreground bg-paper-soft"
+              : "text-muted-foreground hover:text-foreground hover:bg-paper-soft",
+            "data-[state=open]:text-foreground data-[state=open]:bg-paper-soft"
+          )}
+        >
+          <KanbanSquare className="h-3.5 w-3.5" />
+          Pipeline
+          <ChevronDown className="h-3 w-3 ml-0.5 opacity-60" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-[10rem]">
+        {items.map((item) => (
+          <DropdownMenuItem key={item.to} asChild>
+            <Link
+              to={item.to}
+              className="flex items-center gap-1.5 cursor-pointer font-mono text-[11px] uppercase tracking-widest"
+              activeProps={{ className: "text-foreground bg-paper-soft" }}
+              activeOptions={{ exact: item.to === "/" }}
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
