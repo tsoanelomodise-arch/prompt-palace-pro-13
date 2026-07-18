@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { PromptTaxonomyFields } from "@/components/PromptTaxonomyFields";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -117,16 +118,12 @@ function NewPrompt() {
           <Input id="description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="mt-1.5 h-11" placeholder="What this prompt is for" />
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="category">Category</Label>
-            <Input id="category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="mt-1.5 h-11" placeholder="Copywriting" />
-          </div>
-          <div>
-            <Label htmlFor="tags">Tags <span className="text-muted-foreground font-normal">(comma-separated)</span></Label>
-            <Input id="tags" value={form.tagsRaw} onChange={(e) => setForm({ ...form, tagsRaw: e.target.value })} className="mt-1.5 h-11" placeholder="gpt-5, brand, hero" />
-          </div>
-        </div>
+        <PromptTaxonomyFields
+          category={form.category}
+          tagsRaw={form.tagsRaw}
+          onCategoryChange={(v) => setForm({ ...form, category: v })}
+          onTagsRawChange={(v) => setForm({ ...form, tagsRaw: v })}
+        />
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
