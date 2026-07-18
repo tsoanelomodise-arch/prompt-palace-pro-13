@@ -104,28 +104,42 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
       return out;
     }, [value]);
 
+    // ---------- Display <-> real value transforms ----------
+    // The textarea shows short tokens like `![alt](image#1)` instead of the
+    // full signed URL so pasting an image doesn't dump a wall of URL text.
+    // The real value (with actual URLs) is what we pass to onValueChange.
+    const urlMap = useMemo(() => {
+      const urls: string[] = [];
+      const re = /!\[[^\]]*\]\(([^)\s]+)\)/g;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(value)) !== null) {
+        if (!urls.includes(m[1])) urls.push(m[1]);
+      }
+      return urls;
+    }, [value]);
+
+    const displayValue = useMemo(() => {
+      return value.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (full, alt, url) => {
+        const idx = urlMap.indexOf(url);
+        return idx >= 0 ? `![${alt}](image#${idx + 1})` : full;
+      });
+    }, [value, urlMap]);
+
+    const displayToReal = (display: string, extra?: Record<number, string>): string => {
+      return display.replace(/!\[([^\]]*)\]\(image#(\d+)\)/g, (m, alt, n) => {
+        const i = Number(n) - 1;
+        const url = extra?.[i] ?? urlMap[i];
+        return url ? `![${alt}](${url})` : m;
+      });
+    };
+
     const removeImage = (match: string) => {
       // Remove the markdown token and tidy surrounding blank lines.
       const next = value.replace(match, "").replace(/\n{3,}/g, "\n\n");
       onValueChange(next);
     };
 
-    const insertAtCursor = (snippet: string) => {
-      const el = innerRef.current;
-      if (!el) {
-        onValueChange(value + snippet);
-        return;
-      }
-      const start = el.selectionStart ?? value.length;
-      const end = el.selectionEnd ?? value.length;
-      const next = value.slice(0, start) + snippet + value.slice(end);
-      onValueChange(next);
-      requestAnimationFrame(() => {
-        el.focus();
-        const pos = start + snippet.length;
-        el.setSelectionRange(pos, pos);
-      });
-    };
+
 
     // ---------- @-mention reference picker ----------
     const runSearch = useServerFn(searchReferences);
@@ -170,13 +184,13 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
         closeMention();
         return;
       }
-      const caret = el.selectionStart ?? value.length;
-      const before = value.slice(0, mention.anchorStart);
-      const after = value.slice(caret);
+      const caret = el.selectionStart ?? displayValue.length;
+      const before = displayValue.slice(0, mention.anchorStart);
+      const after = displayValue.slice(caret);
       const safeLabel = item.label.replace(/[\[\]]/g, "");
       const snippet = `[${safeLabel}](${item.url})`;
-      const next = before + snippet + after;
-      onValueChange(next);
+      const nextDisplay = before + snippet + after;
+      onValueChange(displayToReal(nextDisplay));
       const pos = before.length + snippet.length;
       requestAnimationFrame(() => {
         el.focus();
@@ -186,11 +200,11 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
     };
 
     const onTextareaChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
-      const next = e.target.value;
-      onValueChange(next);
-      const caret = e.target.selectionStart ?? next.length;
+      const displayed = e.target.value;
+      onValueChange(displayToReal(displayed));
+      const caret = e.target.selectionStart ?? displayed.length;
       // Look back from the caret for the most recent '@' that starts a token.
-      const upto = next.slice(0, caret);
+      const upto = displayed.slice(0, caret);
       const m = upto.match(/(?:^|\s)@([\w-]{0,40})$/);
       if (m) {
         const query = m[1];
@@ -291,12 +305,19 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
       if (imgs.length === 0) return;
       setBusy(true);
       let added = 0;
+      // Accumulate real markdown locally so multiple images in one drop/paste
+      // don't race on stale props between iterations.
+      const el = innerRef.current;
+      const displayCaret = el?.selectionStart ?? displayValue.length;
+      const beforeReal = displayToReal(displayValue.slice(0, displayCaret));
+      const afterReal = displayToReal(displayValue.slice(displayCaret));
+      let insertion = "";
       try {
         for (const f of imgs) {
           try {
             const url = await uploadImage(f);
             const alt = f.name.replace(/\.[^.]+$/, "") || "image";
-            insertAtCursor(`\n\n![${alt}](${url})\n\n`);
+            insertion += `\n\n![${alt}](${url})\n\n`;
             added++;
           } catch (e) {
             toast.error(e instanceof Error ? e.message : "Image failed");
@@ -304,6 +325,9 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
         }
       } finally {
         setBusy(false);
+      }
+      if (added > 0) {
+        onValueChange(beforeReal + insertion + afterReal);
       }
       if (added > 0 && source === "paste") {
         toast.success(added === 1 ? "Image pasted" : `${added} images pasted`);
@@ -356,7 +380,7 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
         ) : (
           <Textarea
             ref={innerRef}
-            value={value}
+            value={displayValue}
             onChange={onTextareaChange}
             onKeyDown={onTextareaKeyDown}
             onBlur={() => setTimeout(closeMention, 150)}
@@ -482,12 +506,12 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
                   const el = innerRef.current;
                   if (!el) return;
                   el.focus();
-                  const caret = el.selectionStart ?? value.length;
-                  const before = value.slice(0, caret);
-                  const after = value.slice(caret);
+                  const caret = el.selectionStart ?? displayValue.length;
+                  const before = displayValue.slice(0, caret);
+                  const after = displayValue.slice(caret);
                   const needsSpace = before.length > 0 && !/\s$/.test(before);
                   const insert = (needsSpace ? " " : "") + "@";
-                  onValueChange(before + insert + after);
+                  onValueChange(displayToReal(before + insert + after));
                   const newCaret = caret + insert.length;
                   requestAnimationFrame(() => {
                     el.focus();
