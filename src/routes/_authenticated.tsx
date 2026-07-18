@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, redirect, Link, useRouter } from "@tanstack/re
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { BookMarked, LogOut, Users, Library, Shield, BookOpen, KanbanSquare } from "lucide-react";
+import { BookMarked, LogOut, Users, Library, Shield, BookOpen, KanbanSquare, Repeat } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
