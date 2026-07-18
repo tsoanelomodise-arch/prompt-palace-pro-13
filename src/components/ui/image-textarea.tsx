@@ -12,24 +12,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Textarea as PlainTextarea } from "@/components/ui/textarea";
 import { DiffView } from "@/components/ui/diff-view";
+import { supabase } from "@/integrations/supabase/client";
 
 const MAX_DIMENSION = 1600;
 const JPEG_QUALITY = 0.82;
-const MAX_BYTES_AFTER = 1_800_000; // ~1.8MB cap on the data URL payload
+const SIGNED_URL_TTL = 60 * 60 * 24 * 365 * 10; // 10 years
 
-async function fileToDataUrl(file: File): Promise<string> {
-  if (!file.type.startsWith("image/")) throw new Error("Not an image");
-
-  // SVGs: pass through unchanged
-  if (file.type === "image/svg+xml") {
-    return await new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload = () => res(r.result as string);
-      r.onerror = () => rej(new Error("Read failed"));
-      r.readAsDataURL(file);
-    });
-  }
-
+async function downscaleImage(file: File): Promise<Blob> {
+  if (file.type === "image/svg+xml" || file.type === "image/gif") return file;
   const bitmap = await createImageBitmap(file);
   let { width, height } = bitmap;
   const scale = Math.min(1, MAX_DIMENSION / Math.max(width, height));
@@ -43,14 +33,46 @@ async function fileToDataUrl(file: File): Promise<string> {
   if (!ctx) throw new Error("Canvas unavailable");
   ctx.drawImage(bitmap, 0, 0, width, height);
 
-  // Keep PNG for files with transparency, else compress to JPEG
-  const outType = file.type === "image/png" || file.type === "image/gif" ? "image/png" : "image/jpeg";
-  const dataUrl = canvas.toDataURL(outType, JPEG_QUALITY);
+  const outType = file.type === "image/png" ? "image/png" : "image/jpeg";
+  const blob: Blob | null = await new Promise((res) =>
+    canvas.toBlob((b) => res(b), outType, JPEG_QUALITY),
+  );
+  if (!blob) throw new Error("Encode failed");
+  return blob;
+}
 
-  if (dataUrl.length > MAX_BYTES_AFTER * 1.37) {
-    throw new Error("Image too large after compression — try a smaller one");
-  }
-  return dataUrl;
+function extFor(mime: string): string {
+  if (mime === "image/png") return "png";
+  if (mime === "image/gif") return "gif";
+  if (mime === "image/webp") return "webp";
+  if (mime === "image/svg+xml") return "svg";
+  return "jpg";
+}
+
+async function uploadImage(file: File): Promise<string> {
+  if (!file.type.startsWith("image/")) throw new Error("Not an image");
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) throw new Error("You must be signed in to upload images");
+
+  const blob = await downscaleImage(file);
+  const ext = extFor(blob.type || file.type);
+  const path = `${uid}/${crypto.randomUUID()}.${ext}`;
+
+  const { error: upErr } = await supabase.storage
+    .from("content-images")
+    .upload(path, blob, {
+      contentType: blob.type || file.type,
+      cacheControl: "31536000",
+      upsert: false,
+    });
+  if (upErr) throw new Error(upErr.message);
+
+  const { data: signed, error: sErr } = await supabase.storage
+    .from("content-images")
+    .createSignedUrl(path, SIGNED_URL_TTL);
+  if (sErr || !signed?.signedUrl) throw new Error(sErr?.message ?? "Sign failed");
+  return signed.signedUrl;
 }
 
 export type ImageTextareaProps = Omit<
