@@ -20,7 +20,7 @@ import {
   Briefcase, User as UserIcon, FileText, StickyNote, Mail, Phone, Pencil, Save, X,
   MessageSquare, PhoneCall, Users, MessageCircle, CalendarClock, Repeat,
 } from "lucide-react";
-import { REPEAT_INTERVALS, repeatLabel, type RepeatInterval } from "@/lib/pipeline";
+import { REPEAT_INTERVALS, repeatLabel, PIPELINE_STAGES, isPipelineStage, type RepeatInterval, type PipelineStage } from "@/lib/pipeline";
 import { formatDistanceToNow, format } from "date-fns";
 import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 import { useAutosave } from "@/hooks/use-autosave";
@@ -265,7 +265,7 @@ function ProjectsPane({ clientId }: { clientId: string }) {
   const { user } = useAuth();
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
-  const [status, setStatus] = useState("active");
+  const [status, setStatus] = useState<PipelineStage>("lead");
   const [repeatInterval, setRepeatInterval] = useState<RepeatInterval>("none");
 
   const { data: projects = [] } = useQuery({
@@ -292,10 +292,22 @@ function ProjectsPane({ clientId }: { clientId: string }) {
       created_by: user.id,
     });
     if (error) return toast.error(error.message);
-    setName(""); setStatus("active"); setRepeatInterval("none"); setAdding(false);
+    setName(""); setStatus("lead"); setRepeatInterval("none"); setAdding(false);
     qc.invalidateQueries({ queryKey: ["projects", clientId] });
     qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
     toast.success("Project added");
+  };
+
+  const updateStage = async (projectId: string, value: PipelineStage) => {
+    const current = projects.find((p) => p.id === projectId);
+    const updates: { status: PipelineStage; delivered_at?: string | null } = { status: value };
+    if (value === "delivered" && !(current as any)?.delivered_at) updates.delivered_at = new Date().toISOString();
+    if (value !== "delivered" && (current as any)?.delivered_at) updates.delivered_at = null;
+    const { error } = await supabase.from("projects").update(updates).eq("id", projectId);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["projects", clientId] });
+    qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
+    toast.success("Stage updated");
   };
 
   const updateRepeat = async (projectId: string, value: RepeatInterval) => {
@@ -345,14 +357,11 @@ function ProjectsPane({ clientId }: { clientId: string }) {
             <Input value={name} onChange={(e) => setName(e.target.value)} className="h-10 mt-1" placeholder="Website redesign" autoFocus />
           </div>
           <div>
-            <Label className="text-xs">Status</Label>
-            <select value={status} onChange={(e) => setStatus(e.target.value)} className="h-10 mt-1 rounded-md border border-input bg-background px-3 text-sm">
-              <option value="lead">Lead</option>
-              <option value="proposal">Proposal</option>
-              <option value="active">Active</option>
-              <option value="review">Review</option>
-              <option value="delivered">Delivered</option>
-              <option value="lost">Lost</option>
+            <Label className="text-xs">Stage</Label>
+            <select value={status} onChange={(e) => setStatus(e.target.value as PipelineStage)} className="h-10 mt-1 rounded-md border border-input bg-background px-3 text-sm">
+              {PIPELINE_STAGES.map((s) => (
+                <option key={s.id} value={s.id}>{s.label}</option>
+              ))}
             </select>
           </div>
           <div>
@@ -384,7 +393,16 @@ function ProjectsPane({ clientId }: { clientId: string }) {
                     onSave={(next) => renameProject(p.id, next)}
                   />
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{p.status}</span>
+                    <select
+                      value={isPipelineStage(p.status) ? p.status : "lead"}
+                      onChange={(e) => updateStage(p.id, e.target.value as PipelineStage)}
+                      className="h-7 rounded-md border border-input bg-background px-2 font-mono text-[10px] uppercase tracking-widest"
+                      title="Pipeline stage"
+                    >
+                      {PIPELINE_STAGES.map((s) => (
+                        <option key={s.id} value={s.id}>{s.label}</option>
+                      ))}
+                    </select>
                     <DeleteProjectButton projectIds={p.id} projectName={p.name} clientId={clientId} />
                   </div>
                 </div>
