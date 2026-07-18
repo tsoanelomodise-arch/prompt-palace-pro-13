@@ -76,18 +76,27 @@ function PipelinePage() {
   const activeProjects = useMemo(() => projects.filter((p) => !p.archived_at), [projects]);
   const archivedProjects = useMemo(() => projects.filter((p) => !!p.archived_at), [projects]);
 
+  const filteredActive = useMemo(
+    () => activeProjects.filter((p) => matchesDateFilter(p.due_date, dateFilter)),
+    [activeProjects, dateFilter],
+  );
+
   const grouped = useMemo(() => {
     const map: Record<PipelineStage, ProjectRow[]> = {
       lead: [], proposal: [], active: [], review: [], delivered: [], lost: [],
     };
-    for (const p of activeProjects) {
+    for (const p of filteredActive) {
       if (p.status in map) map[p.status as PipelineStage].push(p);
     }
     return map;
-  }, [activeProjects]);
+  }, [filteredActive]);
 
   const validStages = new Set<string>(PIPELINE_STAGES.map((s) => s.id));
-  const offPipeline = activeProjects.filter((p) => !validStages.has(p.status));
+  const offPipeline = filteredActive.filter((p) => !validStages.has(p.status));
+  const overdueCount = useMemo(
+    () => activeProjects.filter((p) => (daysUntil(p.due_date) ?? 0) < 0).length,
+    [activeProjects],
+  );
 
   const move = async (projectId: string, stage: PipelineStage) => {
     const current = projects.find((p) => p.id === projectId);
