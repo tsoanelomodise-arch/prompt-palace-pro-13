@@ -263,6 +263,7 @@ function RecurringDashboard() {
                         <th className="px-4 py-3">Project</th>
                         <th className="px-4 py-3">Client</th>
                         <th className="px-4 py-3">Current stage</th>
+                        <th className="px-4 py-3">Next occurrence</th>
                         <th className="px-4 py-3">Work in progress</th>
                         <th className="px-4 py-3">Last delivered</th>
                         <th className="px-4 py-3 text-center">Occurrences</th>
