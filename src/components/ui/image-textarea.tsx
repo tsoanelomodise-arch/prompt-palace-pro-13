@@ -264,22 +264,27 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
 
 
 
-    const handleFiles = async (files: FileList | File[]) => {
-      const images = Array.from(files).filter((f) => f.type.startsWith("image/"));
-      if (images.length === 0) return;
+    const handleFiles = async (files: FileList | File[], source: "paste" | "drop" | "pick" = "pick") => {
+      const imgs = Array.from(files).filter((f) => f.type.startsWith("image/"));
+      if (imgs.length === 0) return;
       setBusy(true);
+      let added = 0;
       try {
-        for (const f of images) {
+        for (const f of imgs) {
           try {
             const url = await fileToDataUrl(f);
             const alt = f.name.replace(/\.[^.]+$/, "") || "image";
             insertAtCursor(`\n\n![${alt}](${url})\n\n`);
+            added++;
           } catch (e) {
             toast.error(e instanceof Error ? e.message : "Image failed");
           }
         }
       } finally {
         setBusy(false);
+      }
+      if (added > 0 && source === "paste") {
+        toast.success(added === 1 ? "Image pasted" : `${added} images pasted`);
       }
     };
 
@@ -295,7 +300,7 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
       }
       if (files.length > 0) {
         e.preventDefault();
-        void handleFiles(files);
+        void handleFiles(files, "paste");
       }
     };
 
@@ -304,9 +309,12 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
       if (files && files.length > 0 && Array.from(files).some((f) => f.type.startsWith("image/"))) {
         e.preventDefault();
         setDragOver(false);
-        void handleFiles(files);
+        void handleFiles(files, "drop");
       }
     };
+
+    const [lightbox, setLightbox] = useState<{ url: string; alt: string } | null>(null);
+
 
     return (
       <div className="relative">
