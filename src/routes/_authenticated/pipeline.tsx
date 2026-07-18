@@ -436,6 +436,9 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
   const [status, setStatus] = useState<PipelineStage>("lead");
   const [notes, setNotes] = useState("");
   const [repeatInterval, setRepeatInterval] = useState<RepeatInterval>("none");
+  const [startDate, setStartDate] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [nextOccurrenceDate, setNextOccurrenceDate] = useState("");
   const [addingClient, setAddingClient] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [creatingClient, setCreatingClient] = useState(false);
@@ -447,6 +450,9 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
     setStatus("lead");
     setNotes("");
     setRepeatInterval("none");
+    setStartDate("");
+    setDueDate("");
+    setNextOccurrenceDate("");
   };
 
   const submit = async (e: React.FormEvent) => {
