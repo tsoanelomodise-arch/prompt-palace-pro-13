@@ -20,7 +20,7 @@ import {
   Briefcase, User as UserIcon, FileText, StickyNote, Mail, Phone, Pencil, Save, X,
   MessageSquare, PhoneCall, Users, MessageCircle, CalendarClock, Repeat,
 } from "lucide-react";
-import { REPEAT_INTERVALS, repeatLabel, type RepeatInterval } from "@/lib/pipeline";
+import { REPEAT_INTERVALS, repeatLabel, PIPELINE_STAGES, isPipelineStage, type RepeatInterval, type PipelineStage } from "@/lib/pipeline";
 import { formatDistanceToNow, format } from "date-fns";
 import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 import { useAutosave } from "@/hooks/use-autosave";
