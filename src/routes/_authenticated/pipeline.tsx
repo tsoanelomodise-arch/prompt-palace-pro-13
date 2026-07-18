@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { PIPELINE_STAGES, REPEAT_INTERVALS, repeatLabel, DATE_FILTERS, matchesDateFilter, daysUntil, formatShortDate, parseDateOnly, type PipelineStage, type RepeatInterval, type DateFilter } from "@/lib/pipeline";
+import { PIPELINE_STAGES, REPEAT_INTERVALS, repeatLabel, DATE_FILTERS, matchesDateFilter, daysUntil, formatShortDate, type PipelineStage, type RepeatInterval, type DateFilter } from "@/lib/pipeline";
 import { PipelineTabs } from "./recurring";
 import { GripVertical, Briefcase, Plus, Repeat, Archive, ArchiveRestore, ChevronDown, ChevronRight, CalendarClock, CalendarCheck2, CalendarDays, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
