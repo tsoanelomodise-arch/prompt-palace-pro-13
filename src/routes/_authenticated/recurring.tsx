@@ -51,7 +51,7 @@ function RecurringDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id,name,status,notes,client_id,created_at,updated_at,repeat_interval,archived_at")
+        .select("id,name,status,notes,client_id,created_at,updated_at,repeat_interval,archived_at,start_date,due_date,delivered_at,next_occurrence_date")
         .neq("repeat_interval", "none")
         .order("updated_at", { ascending: false });
       if (error) throw error;
