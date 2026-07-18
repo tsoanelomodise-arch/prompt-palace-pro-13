@@ -1094,6 +1094,27 @@ function ConversationsPane({ clientId }: { clientId: string }) {
     qc.invalidateQueries({ queryKey: ["client-conversations", clientId] });
   };
 
+  const convoAutosave = useAutosave(
+    form,
+    async (v) => {
+      if (!editingId || !v.subject.trim() || !v.summary.trim()) return;
+      const { error } = await supabase.from("client_conversations").update({
+        channel: v.channel,
+        subject: v.subject.trim(),
+        summary: v.summary.trim(),
+        participants: v.participants.trim() || null,
+        occurred_at: new Date(v.occurred_at).toISOString(),
+        follow_up_at: v.follow_up_at ? new Date(v.follow_up_at).toISOString() : null,
+        contact_id: v.contact_id || null,
+        project_id: v.project_id || null,
+      }).eq("id", editingId);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["client-conversations", clientId] });
+    },
+    { enabled: !!editingId && open },
+  );
+
+
   return (
     <div className="max-w-3xl">
       <div className="mb-6 flex items-center justify-between">
