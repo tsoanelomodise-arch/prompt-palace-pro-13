@@ -29,6 +29,10 @@ type ProjectRow = {
   updated_at: string;
   repeat_interval: string;
   archived_at: string | null;
+  start_date: string | null;
+  due_date: string | null;
+  delivered_at: string | null;
+  next_occurrence_date: string | null;
 };
 
 type ClientLite = { id: string; name: string };
