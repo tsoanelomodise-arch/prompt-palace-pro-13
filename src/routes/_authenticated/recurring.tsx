@@ -295,6 +295,36 @@ function RecurringDashboard() {
                                 </span>
                               )}
                             </td>
+                            <td className="px-4 py-3">
+                              {s.wip.length === 0 ? (
+                                <span className="text-muted-foreground/60">—</span>
+                              ) : (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {s.wip.map((w) => {
+                                    const wm = stageMeta(w.status);
+                                    return (
+                                      <button
+                                        key={w.id}
+                                        type="button"
+                                        onClick={() =>
+                                          router.navigate({
+                                            to: "/clients/$clientId",
+                                            params: { clientId: w.client_id },
+                                            hash: "projects",
+                                          })
+                                        }
+                                        title={`Updated ${formatDistanceToNow(new Date(w.updated_at), { addSuffix: true })}`}
+                                        className="inline-flex items-center gap-1"
+                                      >
+                                        {wm && <StagePill stage={wm.id} label={wm.label} />}
+                                      </button>
+                                    );
+                                  })}
+                                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground self-center">
+                                    ×{s.wip.length}
+                                  </span>
+                                </div>
+                              )}
                             <td className="px-4 py-3 text-muted-foreground">
                               {s.lastDeliveredAt ? (
                                 <span title={format(new Date(s.lastDeliveredAt), "PPp")}>
