@@ -357,14 +357,11 @@ function ProjectsPane({ clientId }: { clientId: string }) {
             <Input value={name} onChange={(e) => setName(e.target.value)} className="h-10 mt-1" placeholder="Website redesign" autoFocus />
           </div>
           <div>
-            <Label className="text-xs">Status</Label>
-            <select value={status} onChange={(e) => setStatus(e.target.value)} className="h-10 mt-1 rounded-md border border-input bg-background px-3 text-sm">
-              <option value="lead">Lead</option>
-              <option value="proposal">Proposal</option>
-              <option value="active">Active</option>
-              <option value="review">Review</option>
-              <option value="delivered">Delivered</option>
-              <option value="lost">Lost</option>
+            <Label className="text-xs">Stage</Label>
+            <select value={status} onChange={(e) => setStatus(e.target.value as PipelineStage)} className="h-10 mt-1 rounded-md border border-input bg-background px-3 text-sm">
+              {PIPELINE_STAGES.map((s) => (
+                <option key={s.id} value={s.id}>{s.label}</option>
+              ))}
             </select>
           </div>
           <div>
