@@ -76,9 +76,12 @@ function RecurringDashboard() {
     name: string;
     interval: RepeatInterval;
     current: ProjectRow | null;
+    wip: ProjectRow[];
     occurrences: number;
     lastDeliveredAt: string | null;
   };
+
+  const WIP_STAGES = new Set<string>(["active", "review"]);
 
   const seriesList = useMemo<Series[]>(() => {
     const byKey = new Map<string, ProjectRow[]>();
@@ -100,12 +103,16 @@ function RecurringDashboard() {
       const deliveredRows = rows
         .filter((r) => r.status === "delivered")
         .sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at));
+      const wip = rows
+        .filter((r) => WIP_STAGES.has(r.status))
+        .sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at));
       out.push({
         key,
         clientId: anyRow.client_id,
         name: anyRow.name,
         interval: anyRow.repeat_interval as RepeatInterval,
         current: inFlight ?? null,
+        wip,
         occurrences: rows.length,
         lastDeliveredAt: deliveredRows[0]?.updated_at ?? null,
       });
@@ -130,6 +137,7 @@ function RecurringDashboard() {
   const totals = {
     series: seriesList.length,
     inFlight: seriesList.filter((s) => s.current).length,
+    wip: seriesList.reduce((n, s) => n + s.wip.length, 0),
     dueNext: seriesList.filter((s) => !s.current).length,
   };
 
@@ -182,7 +190,7 @@ function RecurringDashboard() {
       <div className="flex flex-wrap items-end justify-between gap-6 mb-6 pb-8 border-b border-border">
         <div>
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            {totals.series} series · {totals.inFlight} in flight · {totals.dueNext} awaiting next
+            {totals.series} series · {totals.wip} in progress · {totals.inFlight} in flight · {totals.dueNext} awaiting next
           </p>
           <h1 className="mt-3 font-display text-5xl md:text-6xl font-semibold leading-[0.95] tracking-tight">
             Recurring.
@@ -234,6 +242,7 @@ function RecurringDashboard() {
                         <th className="px-4 py-3">Project</th>
                         <th className="px-4 py-3">Client</th>
                         <th className="px-4 py-3">Current stage</th>
+                        <th className="px-4 py-3">Work in progress</th>
                         <th className="px-4 py-3">Last delivered</th>
                         <th className="px-4 py-3 text-center">Occurrences</th>
                         <th className="px-4 py-3"></th>
@@ -284,6 +293,37 @@ function RecurringDashboard() {
                                 <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                                   awaiting next
                                 </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              {s.wip.length === 0 ? (
+                                <span className="text-muted-foreground/60">—</span>
+                              ) : (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {s.wip.map((w) => {
+                                    const wm = stageMeta(w.status);
+                                    return (
+                                      <button
+                                        key={w.id}
+                                        type="button"
+                                        onClick={() =>
+                                          router.navigate({
+                                            to: "/clients/$clientId",
+                                            params: { clientId: w.client_id },
+                                            hash: "projects",
+                                          })
+                                        }
+                                        title={`Updated ${formatDistanceToNow(new Date(w.updated_at), { addSuffix: true })}`}
+                                        className="inline-flex items-center gap-1"
+                                      >
+                                        {wm && <StagePill stage={wm.id} label={wm.label} />}
+                                      </button>
+                                    );
+                                  })}
+                                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground self-center">
+                                    ×{s.wip.length}
+                                  </span>
+                                </div>
                               )}
                             </td>
                             <td className="px-4 py-3 text-muted-foreground">
