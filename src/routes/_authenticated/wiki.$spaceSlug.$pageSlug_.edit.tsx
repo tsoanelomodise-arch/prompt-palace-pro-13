@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageTextarea } from "@/components/ui/image-textarea";
+import { WysiwygEditor } from "@/components/ui/wysiwyg-editor";
 import { toast } from "sonner";
-import { Check, Eye, Edit3 } from "lucide-react";
+import { Check, Eye, Edit3, Wand2 } from "lucide-react";
 import { Markdown } from "@/components/ui/markdown";
 import { useAutosave } from "@/hooks/use-autosave";
 import { SaveStatus } from "@/components/ui/save-status";
@@ -21,7 +22,7 @@ function PageEdit() {
   const { spaceSlug, pageSlug } = Route.useParams();
   const router = useRouter();
   const { user, isAdmin } = useAuth();
-  const [view, setView] = useState<"edit" | "preview">("edit");
+  const [view, setView] = useState<"rich" | "edit" | "preview">("rich");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [excerpt, setExcerpt] = useState("");
@@ -103,12 +104,20 @@ function PageEdit() {
       <div className="flex items-center justify-between pb-4 mb-4 border-b border-border">
         <div className="flex items-center gap-1 bg-paper-soft rounded-md p-0.5">
           <button
+            onClick={() => setView("rich")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-widest rounded transition ${
+              view === "rich" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+            }`}
+          >
+            <Wand2 className="h-3 w-3" /> Rich
+          </button>
+          <button
             onClick={() => setView("edit")}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-widest rounded transition ${
               view === "edit" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
             }`}
           >
-            <Edit3 className="h-3 w-3" /> Edit
+            <Edit3 className="h-3 w-3" /> Markdown
           </button>
           <button
             onClick={() => setView("preview")}
@@ -177,12 +186,19 @@ function PageEdit() {
 
         <div>
           <div className="flex items-center justify-between mb-1">
-            <Label className="text-xs">Content (Markdown)</Label>
+            <Label className="text-xs">Content</Label>
             <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              Supports GitHub-flavored markdown
+              {view === "rich" ? "WYSIWYG · stored as markdown" : "GitHub-flavored markdown"}
             </span>
           </div>
-          {view === "edit" ? (
+          {view === "rich" ? (
+            <WysiwygEditor
+              value={content}
+              onValueChange={setContent}
+              className="mt-1"
+              placeholder="Start writing your knowledge here…"
+            />
+          ) : view === "edit" ? (
             <ImageTextarea
               value={content}
               onValueChange={setContent}

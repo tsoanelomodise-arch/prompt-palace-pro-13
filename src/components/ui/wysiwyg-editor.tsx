@@ -254,7 +254,8 @@ export function WysiwygEditor({ value, onValueChange, placeholder, className }: 
       },
     },
     onUpdate: ({ editor }) => {
-      const md = (editor.storage.markdown.getMarkdown() as string) ?? "";
+      const storage = editor.storage as unknown as { markdown?: { getMarkdown: () => string } };
+      const md = storage.markdown?.getMarkdown() ?? "";
       lastEmitted.current = md;
       onValueChange(md);
     },
