@@ -265,7 +265,7 @@ function ProjectsPane({ clientId }: { clientId: string }) {
   const { user } = useAuth();
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
-  const [status, setStatus] = useState("active");
+  const [status, setStatus] = useState<PipelineStage>("lead");
   const [repeatInterval, setRepeatInterval] = useState<RepeatInterval>("none");
 
   const { data: projects = [] } = useQuery({
