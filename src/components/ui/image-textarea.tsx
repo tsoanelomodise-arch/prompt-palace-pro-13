@@ -13,6 +13,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Textarea as PlainTextarea } from "@/components/ui/textarea";
 import { DiffView } from "@/components/ui/diff-view";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  IMAGE_SIZES,
+  SIZE_LABEL,
+  parseImageAlt,
+  rewriteImageMarkdownSize,
+  type ImageSize,
+} from "@/lib/image-size";
 
 const MAX_DIMENSION = 1600;
 const JPEG_QUALITY = 0.82;
