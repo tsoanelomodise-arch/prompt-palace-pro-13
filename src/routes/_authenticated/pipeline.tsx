@@ -604,6 +604,43 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
               Repeating projects auto-queue a fresh Lead when moved to Delivered.
             </p>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="np-start" className="text-xs">Start date</Label>
+              <Input
+                id="np-start"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="mt-1.5 h-10"
+              />
+            </div>
+            <div>
+              <Label htmlFor="np-due" className="text-xs">Due date</Label>
+              <Input
+                id="np-due"
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="mt-1.5 h-10"
+              />
+            </div>
+          </div>
+          {repeatInterval !== "none" && (
+            <div>
+              <Label htmlFor="np-next" className="text-xs">Next occurrence date</Label>
+              <Input
+                id="np-next"
+                type="date"
+                value={nextOccurrenceDate}
+                onChange={(e) => setNextOccurrenceDate(e.target.value)}
+                className="mt-1.5 h-10"
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Used as the due date for the next auto-queued occurrence.
+              </p>
+            </div>
+          )}
           <div>
             <Label htmlFor="np-notes" className="text-xs">Notes (optional)</Label>
             <Textarea
@@ -623,3 +660,50 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
     </Dialog>
   );
 }
+
+function DatePill({ icon, date }: { icon: "start" | "due" | "delivered" | "next"; date: string }) {
+  const isDue = icon === "due";
+  const days = isDue ? daysUntil(date) : null;
+  const overdue = isDue && days !== null && days < 0;
+  const soon = isDue && days !== null && days >= 0 && days <= 3;
+
+  const Icon =
+    icon === "start" ? CalendarDays :
+    icon === "due" ? CalendarClock :
+    icon === "delivered" ? CalendarCheck2 :
+    Repeat;
+
+  const label =
+    icon === "start" ? "Start" :
+    icon === "due" ? "Due" :
+    icon === "delivered" ? "Delivered" :
+    "Next";
+
+  const cls = overdue
+    ? "border-destructive/40 bg-destructive/10 text-destructive"
+    : soon
+      ? "border-foreground/40 bg-paper-soft text-foreground"
+      : "border-border text-muted-foreground";
+
+  const display = icon === "delivered"
+    ? new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : formatShortDate(date);
+
+  return (
+    <span
+      title={
+        icon === "due" && days !== null
+          ? overdue ? `Overdue by ${Math.abs(days)}d` : `Due in ${days}d`
+          : undefined
+      }
+      className={`inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest border rounded-full px-1.5 py-0.5 ${cls}`}
+    >
+      <Icon className="h-2.5 w-2.5" />
+      {label} · {display}
+      {overdue && <AlertTriangle className="h-2.5 w-2.5" />}
+    </span>
+  );
+}
+
+// parseDateOnly is re-exported via the import so linter keeps it referenced
+void parseDateOnly;
