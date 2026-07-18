@@ -417,7 +417,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
       <DialogTrigger asChild>
-        <Button className="h-11 gap-1.5" disabled={clients.length === 0}>
+        <Button className="h-11 gap-1.5">
           <Plus className="h-4 w-4" /> New project
         </Button>
       </DialogTrigger>
