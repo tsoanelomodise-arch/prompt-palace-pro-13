@@ -18,10 +18,12 @@ import { Route as AuthenticatedRecurringRouteImport } from './routes/_authentica
 import { Route as AuthenticatedPipelineRouteImport } from './routes/_authenticated/pipeline'
 import { Route as AuthenticatedNewRouteImport } from './routes/_authenticated/new'
 import { Route as AuthenticatedLoginsRouteImport } from './routes/_authenticated/logins'
+import { Route as AuthenticatedImplementationRouteImport } from './routes/_authenticated/implementation'
 import { Route as AuthenticatedIdRouteImport } from './routes/_authenticated/$id'
 import { Route as AuthenticatedWikiIndexRouteImport } from './routes/_authenticated/wiki.index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients/index'
 import { Route as AuthenticatedWikiSpaceSlugRouteImport } from './routes/_authenticated/wiki.$spaceSlug'
+import { Route as AuthenticatedImplementationProjectIdRouteImport } from './routes/_authenticated/implementation.$projectId'
 import { Route as AuthenticatedClientsNewRouteImport } from './routes/_authenticated/clients/new'
 import { Route as AuthenticatedClientsClientIdRouteImport } from './routes/_authenticated/clients/$clientId'
 import { Route as AuthenticatedWikiSpaceSlugPageSlugRouteImport } from './routes/_authenticated/wiki.$spaceSlug.$pageSlug'
@@ -71,6 +73,12 @@ const AuthenticatedLoginsRoute = AuthenticatedLoginsRouteImport.update({
   path: '/logins',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedImplementationRoute =
+  AuthenticatedImplementationRouteImport.update({
+    id: '/implementation',
+    path: '/implementation',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedIdRoute = AuthenticatedIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -92,6 +100,12 @@ const AuthenticatedWikiSpaceSlugRoute =
     id: '/$spaceSlug',
     path: '/$spaceSlug',
     getParentRoute: () => AuthenticatedWikiRoute,
+  } as any)
+const AuthenticatedImplementationProjectIdRoute =
+  AuthenticatedImplementationProjectIdRouteImport.update({
+    id: '/$projectId',
+    path: '/$projectId',
+    getParentRoute: () => AuthenticatedImplementationRoute,
   } as any)
 const AuthenticatedClientsNewRoute = AuthenticatedClientsNewRouteImport.update({
   id: '/clients/new',
@@ -121,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/$id': typeof AuthenticatedIdRoute
+  '/implementation': typeof AuthenticatedImplementationRouteWithChildren
   '/logins': typeof AuthenticatedLoginsRoute
   '/new': typeof AuthenticatedNewRoute
   '/pipeline': typeof AuthenticatedPipelineRoute
@@ -129,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/wiki': typeof AuthenticatedWikiRouteWithChildren
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/implementation/$projectId': typeof AuthenticatedImplementationProjectIdRoute
   '/wiki/$spaceSlug': typeof AuthenticatedWikiSpaceSlugRouteWithChildren
   '/clients/': typeof AuthenticatedClientsIndexRoute
   '/wiki/': typeof AuthenticatedWikiIndexRoute
@@ -138,6 +154,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/$id': typeof AuthenticatedIdRoute
+  '/implementation': typeof AuthenticatedImplementationRouteWithChildren
   '/logins': typeof AuthenticatedLoginsRoute
   '/new': typeof AuthenticatedNewRoute
   '/pipeline': typeof AuthenticatedPipelineRoute
@@ -146,6 +163,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/clients/new': typeof AuthenticatedClientsNewRoute
+  '/implementation/$projectId': typeof AuthenticatedImplementationProjectIdRoute
   '/wiki/$spaceSlug': typeof AuthenticatedWikiSpaceSlugRouteWithChildren
   '/clients': typeof AuthenticatedClientsIndexRoute
   '/wiki': typeof AuthenticatedWikiIndexRoute
@@ -157,6 +175,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/_authenticated/$id': typeof AuthenticatedIdRoute
+  '/_authenticated/implementation': typeof AuthenticatedImplementationRouteWithChildren
   '/_authenticated/logins': typeof AuthenticatedLoginsRoute
   '/_authenticated/new': typeof AuthenticatedNewRoute
   '/_authenticated/pipeline': typeof AuthenticatedPipelineRoute
@@ -166,6 +185,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
   '/_authenticated/clients/new': typeof AuthenticatedClientsNewRoute
+  '/_authenticated/implementation/$projectId': typeof AuthenticatedImplementationProjectIdRoute
   '/_authenticated/wiki/$spaceSlug': typeof AuthenticatedWikiSpaceSlugRouteWithChildren
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
   '/_authenticated/wiki/': typeof AuthenticatedWikiIndexRoute
@@ -178,6 +198,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/$id'
+    | '/implementation'
     | '/logins'
     | '/new'
     | '/pipeline'
@@ -186,6 +207,7 @@ export interface FileRouteTypes {
     | '/wiki'
     | '/clients/$clientId'
     | '/clients/new'
+    | '/implementation/$projectId'
     | '/wiki/$spaceSlug'
     | '/clients/'
     | '/wiki/'
@@ -195,6 +217,7 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/$id'
+    | '/implementation'
     | '/logins'
     | '/new'
     | '/pipeline'
@@ -203,6 +226,7 @@ export interface FileRouteTypes {
     | '/'
     | '/clients/$clientId'
     | '/clients/new'
+    | '/implementation/$projectId'
     | '/wiki/$spaceSlug'
     | '/clients'
     | '/wiki'
@@ -213,6 +237,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/login'
     | '/_authenticated/$id'
+    | '/_authenticated/implementation'
     | '/_authenticated/logins'
     | '/_authenticated/new'
     | '/_authenticated/pipeline'
@@ -222,6 +247,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/clients/$clientId'
     | '/_authenticated/clients/new'
+    | '/_authenticated/implementation/$projectId'
     | '/_authenticated/wiki/$spaceSlug'
     | '/_authenticated/clients/'
     | '/_authenticated/wiki/'
@@ -299,6 +325,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLoginsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/implementation': {
+      id: '/_authenticated/implementation'
+      path: '/implementation'
+      fullPath: '/implementation'
+      preLoaderRoute: typeof AuthenticatedImplementationRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/$id': {
       id: '/_authenticated/$id'
       path: '/$id'
@@ -326,6 +359,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/wiki/$spaceSlug'
       preLoaderRoute: typeof AuthenticatedWikiSpaceSlugRouteImport
       parentRoute: typeof AuthenticatedWikiRoute
+    }
+    '/_authenticated/implementation/$projectId': {
+      id: '/_authenticated/implementation/$projectId'
+      path: '/$projectId'
+      fullPath: '/implementation/$projectId'
+      preLoaderRoute: typeof AuthenticatedImplementationProjectIdRouteImport
+      parentRoute: typeof AuthenticatedImplementationRoute
     }
     '/_authenticated/clients/new': {
       id: '/_authenticated/clients/new'
@@ -357,6 +397,21 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedImplementationRouteChildren {
+  AuthenticatedImplementationProjectIdRoute: typeof AuthenticatedImplementationProjectIdRoute
+}
+
+const AuthenticatedImplementationRouteChildren: AuthenticatedImplementationRouteChildren =
+  {
+    AuthenticatedImplementationProjectIdRoute:
+      AuthenticatedImplementationProjectIdRoute,
+  }
+
+const AuthenticatedImplementationRouteWithChildren =
+  AuthenticatedImplementationRoute._addFileChildren(
+    AuthenticatedImplementationRouteChildren,
+  )
 
 interface AuthenticatedWikiSpaceSlugRouteChildren {
   AuthenticatedWikiSpaceSlugPageSlugRoute: typeof AuthenticatedWikiSpaceSlugPageSlugRoute
@@ -391,6 +446,7 @@ const AuthenticatedWikiRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedIdRoute: typeof AuthenticatedIdRoute
+  AuthenticatedImplementationRoute: typeof AuthenticatedImplementationRouteWithChildren
   AuthenticatedLoginsRoute: typeof AuthenticatedLoginsRoute
   AuthenticatedNewRoute: typeof AuthenticatedNewRoute
   AuthenticatedPipelineRoute: typeof AuthenticatedPipelineRoute
@@ -405,6 +461,8 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIdRoute: AuthenticatedIdRoute,
+  AuthenticatedImplementationRoute:
+    AuthenticatedImplementationRouteWithChildren,
   AuthenticatedLoginsRoute: AuthenticatedLoginsRoute,
   AuthenticatedNewRoute: AuthenticatedNewRoute,
   AuthenticatedPipelineRoute: AuthenticatedPipelineRoute,
