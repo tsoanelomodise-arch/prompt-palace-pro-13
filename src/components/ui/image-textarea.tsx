@@ -334,7 +334,7 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
           try {
             const url = await uploadImage(f);
             const alt = f.name.replace(/\.[^.]+$/, "") || "image";
-            insertAtCursor(`\n\n![${alt}](${url})\n\n`);
+            insertImageAtCursor(alt, url);
             added++;
           } catch (e) {
             toast.error(e instanceof Error ? e.message : "Image failed");
