@@ -9,8 +9,7 @@ import { Label } from "@/components/ui/label";
 import { ImageTextarea } from "@/components/ui/image-textarea";
 import { toast } from "sonner";
 import { Check, Eye, Edit3 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { Markdown } from "@/components/ui/markdown";
 import { useAutosave } from "@/hooks/use-autosave";
 import { SaveStatus } from "@/components/ui/save-status";
 
@@ -195,9 +194,7 @@ function PageEdit() {
               {content.trim() === "" ? (
                 <p className="text-sm text-muted-foreground italic">Nothing to preview yet.</p>
               ) : (
-                <div className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-display prose-headings:font-semibold prose-pre:bg-paper-soft prose-pre:border prose-pre:border-border">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-                </div>
+                <Markdown className="text-base">{content}</Markdown>
               )}
             </div>
           )}

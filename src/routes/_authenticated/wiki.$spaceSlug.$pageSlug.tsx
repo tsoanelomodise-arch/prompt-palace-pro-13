@@ -11,8 +11,7 @@ import {
 import { toast } from "sonner";
 import { Pencil, Trash2, Clock, Copy } from "lucide-react";
 import { slugify } from "@/lib/wiki";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { Markdown } from "@/components/ui/markdown";
 import { formatDistanceToNow } from "date-fns";
 import { LinkedEntities } from "@/components/wiki/LinkedEntities";
 
@@ -182,9 +181,7 @@ function PageView() {
           This page is empty. {canEdit && "Click Edit to add content."}
         </p>
       ) : (
-        <div className="prose prose-neutral dark:prose-invert max-w-none mt-8 prose-headings:font-display prose-headings:font-semibold prose-pre:bg-paper-soft prose-pre:border prose-pre:border-border">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{data.content}</ReactMarkdown>
-        </div>
+        <Markdown className="mt-8 text-base">{data.content}</Markdown>
       )}
 
       <div className="mt-10">
