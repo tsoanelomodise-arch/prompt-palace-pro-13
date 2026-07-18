@@ -156,14 +156,6 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
       });
     };
 
-    const insertImageAtCursor = (alt: string, url: string) => {
-      const el = innerRef.current;
-      const caret = el?.selectionStart ?? displayValue.length;
-      const nextIdx = urlMap.length; // zero-based slot for the new URL
-      const token = `\n\n![${alt}](image#${nextIdx + 1})\n\n`;
-      const nextDisplay = displayValue.slice(0, caret) + token + displayValue.slice(caret);
-      onValueChange(displayToReal(nextDisplay, { [nextIdx]: url }));
-    };
 
     // ---------- @-mention reference picker ----------
     const runSearch = useServerFn(searchReferences);
