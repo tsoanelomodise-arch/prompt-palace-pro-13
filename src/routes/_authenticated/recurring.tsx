@@ -348,6 +348,8 @@ function RecurringDashboard() {
                                 <div className="flex flex-wrap gap-1.5">
                                   {s.wip.map((w) => {
                                     const wm = stageMeta(w.status);
+                                    const dd = daysUntil(w.due_date);
+                                    const wOverdue = dd !== null && dd < 0;
                                     return (
                                       <button
                                         key={w.id}
@@ -359,10 +361,22 @@ function RecurringDashboard() {
                                             hash: "projects",
                                           })
                                         }
-                                        title={`Updated ${formatDistanceToNow(new Date(w.updated_at), { addSuffix: true })}`}
+                                        title={`Updated ${formatDistanceToNow(new Date(w.updated_at), { addSuffix: true })}${w.due_date ? ` · Due ${formatShortDate(w.due_date)}` : ""}`}
                                         className="inline-flex items-center gap-1"
                                       >
                                         {wm && <StagePill stage={wm.id} label={wm.label} />}
+                                        {w.due_date && (
+                                          <span
+                                            className={`inline-flex items-center gap-0.5 font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${
+                                              wOverdue
+                                                ? "border-destructive/40 bg-destructive/10 text-destructive"
+                                                : "border-border text-muted-foreground"
+                                            }`}
+                                          >
+                                            <CalendarClock className="h-2.5 w-2.5" />
+                                            {formatShortDate(w.due_date)}
+                                          </span>
+                                        )}
                                       </button>
                                     );
                                   })}
