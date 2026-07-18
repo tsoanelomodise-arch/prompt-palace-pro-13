@@ -87,6 +87,7 @@ function RecurringDashboard() {
     occurrences: number;
     lastDeliveredAt: string | null;
     nextDate: string | null;
+    allIds: string[];
   };
 
   const WIP_STAGES = new Set<string>(["active", "review"]);
