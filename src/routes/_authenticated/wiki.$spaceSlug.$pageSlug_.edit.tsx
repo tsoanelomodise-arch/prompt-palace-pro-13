@@ -28,7 +28,7 @@ function PageEdit() {
   const [excerpt, setExcerpt] = useState("");
   const [status, setStatus] = useState<"draft" | "published">("draft");
   const [parentId, setParentId] = useState<string>("");
-  const [saving, setSaving] = useState(false);
+  const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ["wiki-page-edit", spaceSlug, pageSlug],
