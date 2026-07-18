@@ -329,12 +329,19 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
       if (imgs.length === 0) return;
       setBusy(true);
       let added = 0;
+      // Accumulate real markdown locally so multiple images in one drop/paste
+      // don't race on stale props between iterations.
+      const el = innerRef.current;
+      const displayCaret = el?.selectionStart ?? displayValue.length;
+      const beforeReal = displayToReal(displayValue.slice(0, displayCaret));
+      const afterReal = displayToReal(displayValue.slice(displayCaret));
+      let insertion = "";
       try {
         for (const f of imgs) {
           try {
             const url = await uploadImage(f);
             const alt = f.name.replace(/\.[^.]+$/, "") || "image";
-            insertImageAtCursor(alt, url);
+            insertion += `\n\n![${alt}](${url})\n\n`;
             added++;
           } catch (e) {
             toast.error(e instanceof Error ? e.message : "Image failed");
@@ -342,6 +349,9 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
         }
       } finally {
         setBusy(false);
+      }
+      if (added > 0) {
+        onValueChange(beforeReal + insertion + afterReal);
       }
       if (added > 0 && source === "paste") {
         toast.success(added === 1 ? "Image pasted" : `${added} images pasted`);
