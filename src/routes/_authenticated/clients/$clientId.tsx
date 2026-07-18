@@ -23,6 +23,8 @@ import {
 import { REPEAT_INTERVALS, repeatLabel, type RepeatInterval } from "@/lib/pipeline";
 import { formatDistanceToNow, format } from "date-fns";
 import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
+import { useAutosave } from "@/hooks/use-autosave";
+import { SaveStatus } from "@/components/ui/save-status";
 
 export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   component: ClientDetail,
@@ -878,6 +880,7 @@ function NotesPane({ clientId }: { clientId: string }) {
   const qc = useQueryClient();
   const { user } = useAuth();
   const [body, setBody] = useState("");
+  const [draftId, setDraftId] = useState<string | null>(null);
 
   const { data: notes = [] } = useQuery({
     queryKey: ["client-notes", clientId],
@@ -892,32 +895,57 @@ function NotesPane({ clientId }: { clientId: string }) {
     },
   });
 
-  const add = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !body.trim()) return;
-    const { error } = await supabase.from("client_notes").insert({
-      client_id: clientId, body: body.trim(), created_by: user.id,
-    });
-    if (error) return toast.error(error.message);
-    setBody("");
+  const persist = async (text: string) => {
+    if (!user) return;
+    const trimmed = text.trim();
+    if (!trimmed) {
+      if (draftId) {
+        await supabase.from("client_notes").delete().eq("id", draftId);
+        setDraftId(null);
+        qc.invalidateQueries({ queryKey: ["client-notes", clientId] });
+      }
+      return;
+    }
+    if (!draftId) {
+      const { data, error } = await supabase
+        .from("client_notes")
+        .insert({ client_id: clientId, body: trimmed, created_by: user.id })
+        .select("id")
+        .single();
+      if (error) throw error;
+      setDraftId(data.id);
+    } else {
+      const { error } = await supabase.from("client_notes").update({ body: trimmed }).eq("id", draftId);
+      if (error) throw error;
+    }
     qc.invalidateQueries({ queryKey: ["client-notes", clientId] });
+  };
+
+  const autosave = useAutosave(body, persist, { enabled: !!user });
+
+  const finish = () => {
+    setBody("");
+    setDraftId(null);
   };
 
   return (
     <div className="max-w-3xl">
-      <form onSubmit={add} className="mb-6">
+      <div className="mb-6">
         <ImageTextarea
           value={body}
           onValueChange={setBody}
           placeholder="Log a call, meeting, or quick update…"
           className="min-h-[100px]"
         />
-        <div className="mt-2 flex justify-end">
-          <Button type="submit" disabled={!body.trim()}>Add note</Button>
+        <div className="mt-2 flex items-center justify-between">
+          <SaveStatus status={autosave.status} />
+          <Button size="sm" variant="ghost" onClick={finish} disabled={!body.trim()}>
+            New note
+          </Button>
         </div>
-      </form>
+      </div>
       {notes.length === 0 ? (
-        <EmptyTab icon={<StickyNote className="h-8 w-8" />} title="No notes yet" hint="Activity log starts the moment you add one." />
+        <EmptyTab icon={<StickyNote className="h-8 w-8" />} title="No notes yet" hint="Activity log starts the moment you type." />
       ) : (
         <ol className="relative border-l border-border pl-6 space-y-6">
           {notes.map((n) => (
@@ -934,6 +962,7 @@ function NotesPane({ clientId }: { clientId: string }) {
     </div>
   );
 }
+
 
 function EmptyTab({ icon, title, hint }: { icon: React.ReactNode; title: string; hint: string }) {
   return (
@@ -1065,6 +1094,27 @@ function ConversationsPane({ clientId }: { clientId: string }) {
     qc.invalidateQueries({ queryKey: ["client-conversations", clientId] });
   };
 
+  const convoAutosave = useAutosave(
+    form,
+    async (v) => {
+      if (!editingId || !v.subject.trim() || !v.summary.trim()) return;
+      const { error } = await supabase.from("client_conversations").update({
+        channel: v.channel,
+        subject: v.subject.trim(),
+        summary: v.summary.trim(),
+        participants: v.participants.trim() || null,
+        occurred_at: new Date(v.occurred_at).toISOString(),
+        follow_up_at: v.follow_up_at ? new Date(v.follow_up_at).toISOString() : null,
+        contact_id: v.contact_id || null,
+        project_id: v.project_id || null,
+      }).eq("id", editingId);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["client-conversations", clientId] });
+    },
+    { enabled: !!editingId && open },
+  );
+
+
   return (
     <div className="max-w-3xl">
       <div className="mb-6 flex items-center justify-between">
@@ -1138,11 +1188,16 @@ function ConversationsPane({ clientId }: { clientId: string }) {
               {projects.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
-          <div className="sm:col-span-2 flex justify-end gap-2">
-            <Button type="button" variant="ghost" size="sm" onClick={resetForm}>Cancel</Button>
-            <Button type="submit" size="sm" disabled={saving}>
-              {saving ? "Saving…" : editingId ? "Update" : "Log conversation"}
-            </Button>
+          <div className="sm:col-span-2 flex items-center justify-between gap-2">
+            {editingId ? <SaveStatus status={convoAutosave.status} /> : <span />}
+            <div className="flex gap-2">
+              <Button type="button" variant="ghost" size="sm" onClick={resetForm}>{editingId ? "Done" : "Cancel"}</Button>
+              {!editingId && (
+                <Button type="submit" size="sm" disabled={saving}>
+                  {saving ? "Saving…" : "Log conversation"}
+                </Button>
+              )}
+            </div>
           </div>
         </form>
       )}
