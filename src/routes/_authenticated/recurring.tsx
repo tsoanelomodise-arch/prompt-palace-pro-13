@@ -135,6 +135,7 @@ function RecurringDashboard() {
         occurrences: rows.length,
         lastDeliveredAt: deliveredRows[0]?.delivered_at ?? deliveredRows[0]?.updated_at ?? null,
         nextDate,
+        allIds: rows.map((r) => r.id),
       });
     }
     return out.sort((a, b) => a.name.localeCompare(b.name));
