@@ -10,9 +10,10 @@ import {
   type PipelineStage,
   type RepeatInterval,
 } from "@/lib/pipeline";
-import { Repeat, CheckCircle2, KanbanSquare, Briefcase } from "lucide-react";
+import { Repeat, CheckCircle2, KanbanSquare, Briefcase, CalendarClock, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow, format } from "date-fns";
+import { daysUntil, formatShortDate } from "@/lib/pipeline";
 
 export const Route = createFileRoute("/_authenticated/recurring")({
   component: RecurringDashboard,
