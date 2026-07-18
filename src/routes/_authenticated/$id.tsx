@@ -229,8 +229,8 @@ function PromptDetail() {
             )}
             {editing && (
               <>
-                <Button size="sm" onClick={save} className="gap-1.5"><Save className="h-3.5 w-3.5" /> Save</Button>
-                <Button variant="ghost" size="sm" onClick={() => setEditing(false)} className="gap-1.5"><X className="h-3.5 w-3.5" /> Cancel</Button>
+                <SaveStatus status={autosave.status} className="mr-1" />
+                <Button variant="ghost" size="sm" onClick={exitEdit} className="gap-1.5"><Check className="h-3.5 w-3.5" /> Done</Button>
               </>
             )}
           </div>
