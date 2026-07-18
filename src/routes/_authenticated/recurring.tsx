@@ -154,6 +154,7 @@ function RecurringDashboard() {
         name: s.name,
         status: "lead",
         repeat_interval: s.interval,
+        due_date: nextDueForSeries(s),
         created_by: user?.id ?? null,
       });
       if (error) {
@@ -168,7 +169,7 @@ function RecurringDashboard() {
     const current = s.current;
     const { error } = await supabase
       .from("projects")
-      .update({ status: "delivered" })
+      .update({ status: "delivered", delivered_at: new Date().toISOString() })
       .eq("id", current.id);
     if (error) {
       toast.error("Could not mark delivered");
@@ -180,6 +181,7 @@ function RecurringDashboard() {
       status: "lead",
       notes: current.notes,
       repeat_interval: current.repeat_interval,
+      due_date: current.next_occurrence_date ?? nextDueForSeries(s),
       created_by: user?.id ?? null,
     });
     if (cloneErr) {
