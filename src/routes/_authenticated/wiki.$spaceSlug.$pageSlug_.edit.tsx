@@ -62,23 +62,37 @@ function PageEdit() {
     return <div className="text-sm text-muted-foreground">You don't have permission to edit this page.</div>;
   }
 
-  const save = async () => {
-    if (!title.trim()) return toast.error("Title required");
-    setSaving(true);
+  const pageId = data.page.id;
+  const persist = async (v: { title: string; content: string; excerpt: string; status: "draft" | "published"; parentId: string }) => {
+    if (!v.title.trim()) throw new Error("Title required");
     const { error } = await supabase
       .from("wiki_pages")
       .update({
-        title: title.trim(),
-        content,
-        excerpt: excerpt.trim() || null,
-        status,
-        parent_id: parentId || null,
+        title: v.title.trim(),
+        content: v.content,
+        excerpt: v.excerpt.trim() || null,
+        status: v.status,
+        parent_id: v.parentId || null,
         updated_by: user?.id,
       })
-      .eq("id", data.page.id);
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success("Saved");
+      .eq("id", pageId);
+    if (error) throw error;
+    qc.invalidateQueries({ queryKey: ["wiki-page-edit", spaceSlug, pageSlug] });
+    qc.invalidateQueries({ queryKey: ["wiki-space-pages"] });
+  };
+
+  const autosave = useAutosave(
+    { title, content, excerpt, status, parentId },
+    persist,
+    { enabled: canEdit && !!data.page },
+  );
+
+  const done = async () => {
+    try {
+      await persist({ title, content, excerpt, status, parentId });
+    } catch (e: any) {
+      return toast.error(e?.message ?? "Save failed");
+    }
     router.navigate({
       to: "/wiki/$spaceSlug/$pageSlug",
       params: { spaceSlug, pageSlug: data.page.slug },
@@ -106,23 +120,14 @@ function PageEdit() {
             <Eye className="h-3 w-3" /> Preview
           </button>
         </div>
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => router.navigate({
-              to: "/wiki/$spaceSlug/$pageSlug",
-              params: { spaceSlug, pageSlug: data.page.slug },
-            })}
-            className="gap-1.5"
-          >
-            <X className="h-3.5 w-3.5" /> Cancel
-          </Button>
-          <Button size="sm" onClick={save} disabled={saving} className="gap-1.5">
-            <Save className="h-3.5 w-3.5" /> {saving ? "Saving…" : "Save"}
+        <div className="flex items-center gap-3">
+          <SaveStatus status={autosave.status} />
+          <Button size="sm" onClick={done} className="gap-1.5">
+            <Check className="h-3.5 w-3.5" /> Done
           </Button>
         </div>
       </div>
+
 
       <div className="space-y-4">
         <div>
