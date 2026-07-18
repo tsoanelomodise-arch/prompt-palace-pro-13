@@ -467,12 +467,17 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
       return;
     }
     setSaving(true);
+    const stamp = status === "delivered" ? new Date().toISOString() : null;
     const { error } = await supabase.from("projects").insert({
       client_id: clientId,
       name: name.trim(),
       status,
       notes: notes.trim() || null,
       repeat_interval: repeatInterval,
+      start_date: startDate || null,
+      due_date: dueDate || null,
+      next_occurrence_date: repeatInterval === "none" ? null : nextOccurrenceDate || null,
+      delivered_at: stamp,
       created_by: user.id,
     });
     setSaving(false);
