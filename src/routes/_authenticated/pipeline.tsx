@@ -151,7 +151,10 @@ function PipelinePage() {
             Drag a project card between stages to update its status. Projects with legacy statuses appear below.
           </p>
         </div>
-        <NewProjectButton clients={clients} />
+        <div className="flex items-center gap-3">
+          <PipelineTabs current="pipeline" />
+          <NewProjectButton clients={clients} />
+        </div>
       </div>
 
       {isLoading ? (

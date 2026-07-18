@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedWikiRouteImport } from './routes/_authenticated/wiki'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
+import { Route as AuthenticatedRecurringRouteImport } from './routes/_authenticated/recurring'
 import { Route as AuthenticatedPipelineRouteImport } from './routes/_authenticated/pipeline'
 import { Route as AuthenticatedNewRouteImport } from './routes/_authenticated/new'
 import { Route as AuthenticatedIdRouteImport } from './routes/_authenticated/$id'
@@ -47,6 +48,11 @@ const AuthenticatedWikiRoute = AuthenticatedWikiRouteImport.update({
 const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
   id: '/team',
   path: '/team',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedRecurringRoute = AuthenticatedRecurringRouteImport.update({
+  id: '/recurring',
+  path: '/recurring',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedPipelineRoute = AuthenticatedPipelineRouteImport.update({
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/$id': typeof AuthenticatedIdRoute
   '/new': typeof AuthenticatedNewRoute
   '/pipeline': typeof AuthenticatedPipelineRoute
+  '/recurring': typeof AuthenticatedRecurringRoute
   '/team': typeof AuthenticatedTeamRoute
   '/wiki': typeof AuthenticatedWikiRouteWithChildren
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/$id': typeof AuthenticatedIdRoute
   '/new': typeof AuthenticatedNewRoute
   '/pipeline': typeof AuthenticatedPipelineRoute
+  '/recurring': typeof AuthenticatedRecurringRoute
   '/team': typeof AuthenticatedTeamRoute
   '/': typeof AuthenticatedIndexRoute
   '/clients/$clientId': typeof AuthenticatedClientsClientIdRoute
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/_authenticated/$id': typeof AuthenticatedIdRoute
   '/_authenticated/new': typeof AuthenticatedNewRoute
   '/_authenticated/pipeline': typeof AuthenticatedPipelineRoute
+  '/_authenticated/recurring': typeof AuthenticatedRecurringRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/wiki': typeof AuthenticatedWikiRouteWithChildren
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -162,6 +171,7 @@ export interface FileRouteTypes {
     | '/$id'
     | '/new'
     | '/pipeline'
+    | '/recurring'
     | '/team'
     | '/wiki'
     | '/clients/$clientId'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/$id'
     | '/new'
     | '/pipeline'
+    | '/recurring'
     | '/team'
     | '/'
     | '/clients/$clientId'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/_authenticated/$id'
     | '/_authenticated/new'
     | '/_authenticated/pipeline'
+    | '/_authenticated/recurring'
     | '/_authenticated/team'
     | '/_authenticated/wiki'
     | '/_authenticated/'
@@ -245,6 +257,13 @@ declare module '@tanstack/react-router' {
       path: '/team'
       fullPath: '/team'
       preLoaderRoute: typeof AuthenticatedTeamRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/recurring': {
+      id: '/_authenticated/recurring'
+      path: '/recurring'
+      fullPath: '/recurring'
+      preLoaderRoute: typeof AuthenticatedRecurringRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/pipeline': {
@@ -355,6 +374,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedIdRoute: typeof AuthenticatedIdRoute
   AuthenticatedNewRoute: typeof AuthenticatedNewRoute
   AuthenticatedPipelineRoute: typeof AuthenticatedPipelineRoute
+  AuthenticatedRecurringRoute: typeof AuthenticatedRecurringRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedWikiRoute: typeof AuthenticatedWikiRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -367,6 +387,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIdRoute: AuthenticatedIdRoute,
   AuthenticatedNewRoute: AuthenticatedNewRoute,
   AuthenticatedPipelineRoute: AuthenticatedPipelineRoute,
+  AuthenticatedRecurringRoute: AuthenticatedRecurringRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedWikiRoute: AuthenticatedWikiRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
