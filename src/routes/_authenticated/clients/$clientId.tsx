@@ -393,7 +393,16 @@ function ProjectsPane({ clientId }: { clientId: string }) {
                     onSave={(next) => renameProject(p.id, next)}
                   />
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{p.status}</span>
+                    <select
+                      value={isPipelineStage(p.status) ? p.status : "lead"}
+                      onChange={(e) => updateStage(p.id, e.target.value as PipelineStage)}
+                      className="h-7 rounded-md border border-input bg-background px-2 font-mono text-[10px] uppercase tracking-widest"
+                      title="Pipeline stage"
+                    >
+                      {PIPELINE_STAGES.map((s) => (
+                        <option key={s.id} value={s.id}>{s.label}</option>
+                      ))}
+                    </select>
                     <DeleteProjectButton projectIds={p.id} projectName={p.name} clientId={clientId} />
                   </div>
                 </div>
