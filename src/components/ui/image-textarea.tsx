@@ -208,13 +208,13 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
         closeMention();
         return;
       }
-      const caret = el.selectionStart ?? value.length;
-      const before = value.slice(0, mention.anchorStart);
-      const after = value.slice(caret);
+      const caret = el.selectionStart ?? displayValue.length;
+      const before = displayValue.slice(0, mention.anchorStart);
+      const after = displayValue.slice(caret);
       const safeLabel = item.label.replace(/[\[\]]/g, "");
       const snippet = `[${safeLabel}](${item.url})`;
-      const next = before + snippet + after;
-      onValueChange(next);
+      const nextDisplay = before + snippet + after;
+      onValueChange(displayToReal(nextDisplay));
       const pos = before.length + snippet.length;
       requestAnimationFrame(() => {
         el.focus();
