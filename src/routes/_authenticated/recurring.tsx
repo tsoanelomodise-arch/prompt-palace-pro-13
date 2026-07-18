@@ -325,6 +325,7 @@ function RecurringDashboard() {
                                   </span>
                                 </div>
                               )}
+                            </td>
                             <td className="px-4 py-3 text-muted-foreground">
                               {s.lastDeliveredAt ? (
                                 <span title={format(new Date(s.lastDeliveredAt), "PPp")}>
