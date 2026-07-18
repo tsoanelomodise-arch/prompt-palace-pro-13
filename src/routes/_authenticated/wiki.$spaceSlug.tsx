@@ -151,14 +151,13 @@ function PageAccordion({
   spaceSlug: string;
   pathname: string;
 }) {
-  // Map id → page and parent-id lookup for computing ancestors of the active page.
+  const qc = useQueryClient();
   const byId = useMemo(() => {
     const m = new Map<string, PageRow>();
     pages.forEach((p) => m.set(p.id, p));
     return m;
   }, [pages]);
 
-  // Detect active page from URL and expand all its ancestors.
   const activeSlug = useMemo(() => {
     const prefix = `/wiki/${spaceSlug}/`;
     if (!pathname.startsWith(prefix)) return null;
@@ -182,8 +181,9 @@ function PageAccordion({
   }, [activePage, byId]);
 
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set(ancestorIds));
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ id: string | null; pos: "before" | "after" | "inside" } | null>(null);
 
-  // Keep ancestors of the current page expanded as the user navigates.
   useEffect(() => {
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -207,16 +207,100 @@ function PageAccordion({
     });
   };
 
+  // Check if `maybeAncestor` is ancestor of (or equal to) `nodeId` — prevent dropping into own subtree.
+  const isDescendant = (nodeId: string, maybeAncestor: string): boolean => {
+    if (nodeId === maybeAncestor) return true;
+    for (const child of childrenOf.get(maybeAncestor) ?? []) {
+      if (isDescendant(nodeId, child.id)) return true;
+    }
+    return false;
+  };
+
+  const handleDrop = async (
+    draggedId: string,
+    target: { id: string | null; pos: "before" | "after" | "inside" },
+  ) => {
+    const dragged = byId.get(draggedId);
+    if (!dragged) return;
+    if (target.id && isDescendant(target.id, draggedId)) {
+      toast.error("Can't move a page into itself");
+      return;
+    }
+
+    let newParentId: string | null;
+    let siblings: PageRow[];
+    let insertIndex: number;
+
+    if (target.pos === "inside" && target.id) {
+      newParentId = target.id;
+      siblings = (childrenOf.get(target.id) ?? []).filter((p) => p.id !== draggedId);
+      insertIndex = siblings.length;
+    } else {
+      const targetNode = target.id ? byId.get(target.id) ?? null : null;
+      newParentId = targetNode?.parent_id ?? null;
+      siblings = (childrenOf.get(newParentId) ?? []).filter((p) => p.id !== draggedId);
+      const idx = targetNode ? siblings.findIndex((s) => s.id === targetNode.id) : 0;
+      insertIndex = target.pos === "after" ? idx + 1 : Math.max(0, idx);
+    }
+
+    const reordered = [...siblings];
+    reordered.splice(insertIndex, 0, { ...dragged, parent_id: newParentId });
+
+    const updates = reordered.map((p, i) => ({
+      id: p.id,
+      position: i,
+      parent_id: p.id === draggedId ? newParentId : p.parent_id,
+    }));
+
+    // Optimistic
+    const spaceId = dragged.id; // not used
+    const key = ["wiki-space-pages", pages[0] ? undefined : undefined];
+    void spaceId; void key;
+
+    try {
+      await Promise.all(
+        updates.map((u) =>
+          supabase
+            .from("wiki_pages")
+            .update({ position: u.position, parent_id: u.parent_id })
+            .eq("id", u.id),
+        ),
+      );
+      qc.invalidateQueries({ queryKey: ["wiki-space-pages"] });
+      if (newParentId) {
+        setExpanded((prev) => {
+          const next = new Set(prev);
+          next.add(newParentId!);
+          return next;
+        });
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to move page");
+    }
+  };
+
   return (
-    <PageTree
-      nodes={childrenOf.get(null) ?? []}
-      childrenOf={childrenOf}
-      spaceSlug={spaceSlug}
-      pathname={pathname}
-      depth={0}
-      expanded={expanded}
-      onToggle={toggle}
-    />
+    <div
+      onDragOver={(e) => {
+        // Allow dropping into empty space at end → top-level, after last root
+        if (dragId) e.preventDefault();
+      }}
+    >
+      <PageTree
+        nodes={childrenOf.get(null) ?? []}
+        childrenOf={childrenOf}
+        spaceSlug={spaceSlug}
+        pathname={pathname}
+        depth={0}
+        expanded={expanded}
+        onToggle={toggle}
+        dragId={dragId}
+        setDragId={setDragId}
+        dropTarget={dropTarget}
+        setDropTarget={setDropTarget}
+        onDropPage={handleDrop}
+      />
+    </div>
   );
 }
 
@@ -228,6 +312,11 @@ function PageTree({
   depth,
   expanded,
   onToggle,
+  dragId,
+  setDragId,
+  dropTarget,
+  setDropTarget,
+  onDropPage,
 }: {
   nodes: PageRow[];
   childrenOf: Map<string | null, PageRow[]>;
@@ -236,6 +325,11 @@ function PageTree({
   depth: number;
   expanded: Set<string>;
   onToggle: (id: string) => void;
+  dragId: string | null;
+  setDragId: (id: string | null) => void;
+  dropTarget: { id: string | null; pos: "before" | "after" | "inside" } | null;
+  setDropTarget: (t: { id: string | null; pos: "before" | "after" | "inside" } | null) => void;
+  onDropPage: (draggedId: string, target: { id: string | null; pos: "before" | "after" | "inside" }) => void;
 }) {
   return (
     <ul className="space-y-0.5">
@@ -245,16 +339,67 @@ function PageTree({
         const isOpen = expanded.has(n.id);
         const href = `/wiki/${spaceSlug}/${n.slug}`;
         const isActive = pathname === href;
+        const isDragging = dragId === n.id;
+        const isTarget = dropTarget?.id === n.id;
         return (
           <li key={n.id}>
             <div
-              className={`group flex items-center gap-1 rounded text-sm transition ${
+              draggable
+              onDragStart={(e) => {
+                setDragId(n.id);
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("text/plain", n.id);
+              }}
+              onDragEnd={() => {
+                setDragId(null);
+                setDropTarget(null);
+              }}
+              onDragOver={(e) => {
+                if (!dragId || dragId === n.id) return;
+                e.preventDefault();
+                e.stopPropagation();
+                const rect = e.currentTarget.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+                const h = rect.height;
+                let pos: "before" | "after" | "inside";
+                if (y < h * 0.25) pos = "before";
+                else if (y > h * 0.75) pos = "after";
+                else pos = "inside";
+                setDropTarget({ id: n.id, pos });
+              }}
+              onDragLeave={(e) => {
+                if (dropTarget?.id === n.id) {
+                  // only clear if leaving to outside this row
+                  const related = e.relatedTarget as Node | null;
+                  if (!related || !e.currentTarget.contains(related)) {
+                    // leave to parent handler
+                  }
+                }
+              }}
+              onDrop={(e) => {
+                if (!dragId || dragId === n.id || !dropTarget) return;
+                e.preventDefault();
+                e.stopPropagation();
+                const t = dropTarget;
+                setDropTarget(null);
+                setDragId(null);
+                onDropPage(dragId, t);
+              }}
+              className={`group relative flex items-center gap-1 rounded text-sm transition ${
                 isActive
                   ? "bg-paper-soft text-foreground font-medium"
                   : "text-muted-foreground hover:text-foreground hover:bg-paper-soft"
+              } ${isDragging ? "opacity-40" : ""} ${
+                isTarget && dropTarget?.pos === "inside" ? "ring-1 ring-foreground/40 bg-paper-soft" : ""
               }`}
               style={{ paddingLeft: `${0.25 + depth * 0.75}rem` }}
             >
+              {isTarget && dropTarget?.pos === "before" && (
+                <span className="absolute left-0 right-0 -top-px h-0.5 bg-foreground/70 rounded" />
+              )}
+              {isTarget && dropTarget?.pos === "after" && (
+                <span className="absolute left-0 right-0 -bottom-px h-0.5 bg-foreground/70 rounded" />
+              )}
               {hasKids ? (
                 <button
                   type="button"
@@ -296,6 +441,11 @@ function PageTree({
                 depth={depth + 1}
                 expanded={expanded}
                 onToggle={onToggle}
+                dragId={dragId}
+                setDragId={setDragId}
+                dropTarget={dropTarget}
+                setDropTarget={setDropTarget}
+                onDropPage={onDropPage}
               />
             )}
           </li>
@@ -304,6 +454,7 @@ function PageTree({
     </ul>
   );
 }
+
 
 function NewPageDialog({
   spaceId,
