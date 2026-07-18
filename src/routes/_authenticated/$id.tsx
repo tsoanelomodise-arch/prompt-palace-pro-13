@@ -106,24 +106,27 @@ function PromptDetail() {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const save = async () => {
+  const save = async (next?: typeof form) => {
     if (!prompt) return;
-    const tags = form.tagsRaw.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 20);
+    const src = next ?? form;
+    const tags = src.tagsRaw.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 20);
     const { error } = await supabase.from("prompts").update({
-      title: form.title.trim(),
-      description: form.description.trim() || null,
-      category: form.category.trim() || null,
+      title: src.title.trim() || "Untitled",
+      description: src.description.trim() || null,
+      category: src.category.trim() || null,
       tags,
-      content: form.content,
+      content: src.content,
     }).eq("id", prompt.id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Saved");
-    setEditing(false);
+    if (error) throw error;
     qc.invalidateQueries({ queryKey: ["prompts"] });
     qc.invalidateQueries({ queryKey: ["prompts", id] });
-    if (search.edit) {
-      router.navigate({ to: "/$id", params: { id }, search: {} });
-    }
+  };
+
+  const autosave = useAutosave(form, (v) => save(v), { enabled: editing && !!prompt && isOwner });
+
+  const exitEdit = () => {
+    setEditing(false);
+    if (search.edit) router.navigate({ to: "/$id", params: { id }, search: {} });
   };
 
   const del = async () => {
