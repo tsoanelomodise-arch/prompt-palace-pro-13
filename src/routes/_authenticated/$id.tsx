@@ -20,6 +20,7 @@ import { formatDistanceToNow } from "date-fns";
 import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 import { useAutosave } from "@/hooks/use-autosave";
 import { SaveStatus } from "@/components/ui/save-status";
+import { PromptTaxonomyFields } from "@/components/PromptTaxonomyFields";
 
 export const Route = createFileRoute("/_authenticated/$id")({
   component: PromptDetail,
