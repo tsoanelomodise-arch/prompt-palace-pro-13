@@ -436,13 +436,22 @@ function RecurringDashboard() {
                                 onClick={() => markDelivered(s)}
                                 className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest px-2.5 py-1.5 rounded-md border border-border hover:border-foreground hover:bg-paper-soft transition"
                                 title={
-                                  s.current
-                                    ? "Mark current occurrence delivered and queue next"
-                                    : "Queue next occurrence as a lead"
+                                  s.nextDate
+                                    ? s.current
+                                      ? `Deliver current and queue next lead due ${formatShortDate(s.nextDate)}`
+                                      : `Queue next lead due ${formatShortDate(s.nextDate)}`
+                                    : s.current
+                                      ? "Mark current occurrence delivered and queue next (no next date set)"
+                                      : "Queue next occurrence as a lead (no next date set)"
                                 }
                               >
                                 <CheckCircle2 className="h-3 w-3" />
-                                {s.current ? "Deliver + queue next" : "Queue next"}
+                                {s.current ? "Deliver + queue" : "Queue next"}
+                                {s.nextDate && (
+                                  <span className="text-muted-foreground normal-case tracking-normal">
+                                    → {formatShortDate(s.nextDate)}
+                                  </span>
+                                )}
                               </button>
                             </td>
                           </tr>
