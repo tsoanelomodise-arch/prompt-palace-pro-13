@@ -281,6 +281,56 @@ export type Database = {
           },
         ]
       }
+      project_tasks: {
+        Row: {
+          assignee_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          position: number
+          project_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          position?: number
+          project_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          position?: number
+          project_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           archived_at: string | null
@@ -291,6 +341,7 @@ export type Database = {
           due_date: string | null
           ends_on: string | null
           id: string
+          impl_stage: string | null
           name: string
           next_occurrence_date: string | null
           notes: string | null
@@ -309,6 +360,7 @@ export type Database = {
           due_date?: string | null
           ends_on?: string | null
           id?: string
+          impl_stage?: string | null
           name: string
           next_occurrence_date?: string | null
           notes?: string | null
@@ -327,6 +379,7 @@ export type Database = {
           due_date?: string | null
           ends_on?: string | null
           id?: string
+          impl_stage?: string | null
           name?: string
           next_occurrence_date?: string | null
           notes?: string | null
