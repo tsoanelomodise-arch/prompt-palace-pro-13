@@ -292,10 +292,22 @@ function ProjectsPane({ clientId }: { clientId: string }) {
       created_by: user.id,
     });
     if (error) return toast.error(error.message);
-    setName(""); setStatus("active"); setRepeatInterval("none"); setAdding(false);
+    setName(""); setStatus("lead"); setRepeatInterval("none"); setAdding(false);
     qc.invalidateQueries({ queryKey: ["projects", clientId] });
     qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
     toast.success("Project added");
+  };
+
+  const updateStage = async (projectId: string, value: PipelineStage) => {
+    const current = projects.find((p) => p.id === projectId);
+    const updates: { status: PipelineStage; delivered_at?: string | null } = { status: value };
+    if (value === "delivered" && !(current as any)?.delivered_at) updates.delivered_at = new Date().toISOString();
+    if (value !== "delivered" && (current as any)?.delivered_at) updates.delivered_at = null;
+    const { error } = await supabase.from("projects").update(updates).eq("id", projectId);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["projects", clientId] });
+    qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
+    toast.success("Stage updated");
   };
 
   const updateRepeat = async (projectId: string, value: RepeatInterval) => {
