@@ -104,6 +104,35 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
       return out;
     }, [value]);
 
+    // ---------- Display <-> real value transforms ----------
+    // The textarea shows short tokens like `![alt](image#1)` instead of the
+    // full signed URL so pasting an image doesn't dump a wall of URL text.
+    // The real value (with actual URLs) is what we pass to onValueChange.
+    const urlMap = useMemo(() => {
+      const urls: string[] = [];
+      const re = /!\[[^\]]*\]\(([^)\s]+)\)/g;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(value)) !== null) {
+        if (!urls.includes(m[1])) urls.push(m[1]);
+      }
+      return urls;
+    }, [value]);
+
+    const displayValue = useMemo(() => {
+      return value.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (full, alt, url) => {
+        const idx = urlMap.indexOf(url);
+        return idx >= 0 ? `![${alt}](image#${idx + 1})` : full;
+      });
+    }, [value, urlMap]);
+
+    const displayToReal = (display: string, extra?: Record<number, string>): string => {
+      return display.replace(/!\[([^\]]*)\]\(image#(\d+)\)/g, (m, alt, n) => {
+        const i = Number(n) - 1;
+        const url = extra?.[i] ?? urlMap[i];
+        return url ? `![${alt}](${url})` : m;
+      });
+    };
+
     const removeImage = (match: string) => {
       // Remove the markdown token and tidy surrounding blank lines.
       const next = value.replace(match, "").replace(/\n{3,}/g, "\n\n");
@@ -113,18 +142,27 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
     const insertAtCursor = (snippet: string) => {
       const el = innerRef.current;
       if (!el) {
-        onValueChange(value + snippet);
+        onValueChange(displayToReal(displayValue + snippet));
         return;
       }
-      const start = el.selectionStart ?? value.length;
-      const end = el.selectionEnd ?? value.length;
-      const next = value.slice(0, start) + snippet + value.slice(end);
-      onValueChange(next);
+      const start = el.selectionStart ?? displayValue.length;
+      const end = el.selectionEnd ?? displayValue.length;
+      const nextDisplay = displayValue.slice(0, start) + snippet + displayValue.slice(end);
+      onValueChange(displayToReal(nextDisplay));
       requestAnimationFrame(() => {
         el.focus();
         const pos = start + snippet.length;
         el.setSelectionRange(pos, pos);
       });
+    };
+
+    const insertImageAtCursor = (alt: string, url: string) => {
+      const el = innerRef.current;
+      const caret = el?.selectionStart ?? displayValue.length;
+      const nextIdx = urlMap.length; // zero-based slot for the new URL
+      const token = `\n\n![${alt}](image#${nextIdx + 1})\n\n`;
+      const nextDisplay = displayValue.slice(0, caret) + token + displayValue.slice(caret);
+      onValueChange(displayToReal(nextDisplay, { [nextIdx]: url }));
     };
 
     // ---------- @-mention reference picker ----------
