@@ -1,17 +1,18 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { ImageTextarea } from "@/components/ui/image-textarea";
 import { toast } from "sonner";
-import { Save, X, Eye, Edit3 } from "lucide-react";
+import { Check, Eye, Edit3 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useAutosave } from "@/hooks/use-autosave";
+import { SaveStatus } from "@/components/ui/save-status";
 
 export const Route = createFileRoute("/_authenticated/wiki/$spaceSlug/$pageSlug_/edit")({
   component: PageEdit,
