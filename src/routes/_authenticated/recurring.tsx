@@ -190,7 +190,7 @@ function RecurringDashboard() {
       <div className="flex flex-wrap items-end justify-between gap-6 mb-6 pb-8 border-b border-border">
         <div>
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            {totals.series} series · {totals.inFlight} in flight · {totals.dueNext} awaiting next
+            {totals.series} series · {totals.wip} in progress · {totals.inFlight} in flight · {totals.dueNext} awaiting next
           </p>
           <h1 className="mt-3 font-display text-5xl md:text-6xl font-semibold leading-[0.95] tracking-tight">
             Recurring.
