@@ -522,12 +522,12 @@ export const ImageTextarea = forwardRef<HTMLTextAreaElement, ImageTextareaProps>
                   const el = innerRef.current;
                   if (!el) return;
                   el.focus();
-                  const caret = el.selectionStart ?? value.length;
-                  const before = value.slice(0, caret);
-                  const after = value.slice(caret);
+                  const caret = el.selectionStart ?? displayValue.length;
+                  const before = displayValue.slice(0, caret);
+                  const after = displayValue.slice(caret);
                   const needsSpace = before.length > 0 && !/\s$/.test(before);
                   const insert = (needsSpace ? " " : "") + "@";
-                  onValueChange(before + insert + after);
+                  onValueChange(displayToReal(before + insert + after));
                   const newCaret = caret + insert.length;
                   requestAnimationFrame(() => {
                     el.focus();
