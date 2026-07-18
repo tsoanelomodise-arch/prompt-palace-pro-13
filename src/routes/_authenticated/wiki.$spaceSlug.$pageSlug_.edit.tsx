@@ -9,8 +9,7 @@ import { Label } from "@/components/ui/label";
 import { ImageTextarea } from "@/components/ui/image-textarea";
 import { toast } from "sonner";
 import { Check, Eye, Edit3 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { Markdown } from "@/components/ui/markdown";
 import { useAutosave } from "@/hooks/use-autosave";
 import { SaveStatus } from "@/components/ui/save-status";
 
