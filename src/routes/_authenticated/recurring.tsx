@@ -319,8 +319,9 @@ function RecurringDashboard() {
                               )}
                             </td>
                             <td className="px-4 py-3">
-                              {s.nextDate ? (
-                                (() => {
+                              {(() => {
+                                const target = s.current ?? s.wip[0] ?? null;
+                                const pill = s.nextDate ? (() => {
                                   const d = daysUntil(s.nextDate);
                                   const overdue = d !== null && d < 0;
                                   return (
@@ -333,14 +334,25 @@ function RecurringDashboard() {
                                       }`}
                                     >
                                       <CalendarClock className="h-2.5 w-2.5" />
-                                      {formatShortDate(s.nextDate)}
+                                      {formatShortDate(s.nextDate!)}
                                       {overdue && <AlertTriangle className="h-2.5 w-2.5" />}
                                     </span>
                                   );
-                                })()
-                              ) : (
-                                <span className="text-muted-foreground/60">—</span>
-                              )}
+                                })() : (
+                                  <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest border border-dashed border-border rounded-full px-2 py-0.5 text-muted-foreground hover:text-foreground hover:border-foreground">
+                                    <CalendarPlus className="h-2.5 w-2.5" /> Set date
+                                  </span>
+                                );
+                                return target ? (
+                                  <ProjectDatesPopover
+                                    project={target}
+                                    align="start"
+                                    trigger={<button type="button" className="cursor-pointer">{pill}</button>}
+                                  />
+                                ) : (
+                                  <span className="text-muted-foreground/60">—</span>
+                                );
+                              })()}
                             </td>
                             <td className="px-4 py-3">
                               {s.wip.length === 0 ? (
