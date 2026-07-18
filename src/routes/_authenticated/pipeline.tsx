@@ -165,6 +165,9 @@ function PipelinePage() {
         <div>
           <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             {activeProjects.length} active · {archivedProjects.length} archived · {offPipeline.length} off pipeline
+            {overdueCount > 0 && (
+              <> · <span className="text-destructive">{overdueCount} overdue</span></>
+            )}
           </p>
           <h1 className="mt-3 font-display text-5xl md:text-6xl font-semibold leading-[0.95] tracking-tight">
             Pipeline.
@@ -177,6 +180,33 @@ function PipelinePage() {
           <PipelineTabs current="pipeline" />
           <NewProjectButton clients={clients} />
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mr-1">Due</span>
+        {DATE_FILTERS.map((f) => {
+          const isActive = dateFilter === f.id;
+          const count =
+            f.id === "all"
+              ? activeProjects.length
+              : activeProjects.filter((p) => matchesDateFilter(p.due_date, f.id)).length;
+          return (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setDateFilter(f.id)}
+              className={`font-mono text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-full border transition inline-flex items-center gap-1.5 ${
+                isActive
+                  ? "bg-foreground text-background border-foreground"
+                  : "border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+              }`}
+            >
+              {f.id === "overdue" && <AlertTriangle className="h-3 w-3" />}
+              {f.label}
+              <span className={`tabular-nums ${isActive ? "opacity-80" : "opacity-60"}`}>{count}</span>
+            </button>
+          );
+        })}
       </div>
 
       {isLoading ? (
