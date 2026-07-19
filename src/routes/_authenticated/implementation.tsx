@@ -433,20 +433,36 @@ function ImplementationPage() {
                                 {formatShortDate(p.due_date)}
                               </span>
                             )}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (confirm(`Remove "${p.name}" from implementation? Tasks will be preserved.`)) {
-                                  setStage(p.id, null);
+                            <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                              <ProjectClientPopover
+                                projectId={p.id}
+                                currentClientId={p.client_id}
+                                trigger={
+                                  <button
+                                    type="button"
+                                    className="text-muted-foreground hover:text-foreground"
+                                    title="Reassign client"
+                                    aria-label="Reassign client"
+                                  >
+                                    <Users className="h-3.5 w-3.5" />
+                                  </button>
                                 }
-                              }}
-                              title="Remove from implementation"
-                              aria-label="Remove from implementation"
-                              className="ml-auto opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (confirm(`Remove "${p.name}" from implementation? Tasks will be preserved.`)) {
+                                    setStage(p.id, null);
+                                  }
+                                }}
+                                title="Remove from implementation"
+                                aria-label="Remove from implementation"
+                                className="text-muted-foreground hover:text-destructive"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       );
