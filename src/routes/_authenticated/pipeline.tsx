@@ -19,6 +19,7 @@ import { ProjectClientPopover } from "@/components/ProjectClientPopover";
 import { DeleteProjectButton } from "@/components/DeleteProjectButton";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { PROJECT_TYPES } from "@/lib/project-types";
 
 
 export const Route = createFileRoute("/_authenticated/pipeline")({
