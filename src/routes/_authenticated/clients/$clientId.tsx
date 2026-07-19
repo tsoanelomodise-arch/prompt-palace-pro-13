@@ -26,6 +26,7 @@ import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 import { useAutosave } from "@/hooks/use-autosave";
 import { SaveStatus } from "@/components/ui/save-status";
 import { DeleteProjectButton } from "@/components/DeleteProjectButton";
+import { ProjectClientPopover } from "@/components/ProjectClientPopover";
 
 export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   component: ClientDetail,
