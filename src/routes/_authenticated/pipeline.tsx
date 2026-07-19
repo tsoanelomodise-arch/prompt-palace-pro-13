@@ -85,15 +85,20 @@ function PipelinePage() {
     [activeProjects, dateFilter],
   );
 
+  const boardProjects = useMemo(
+    () => (showDelivered ? filteredActive : filteredActive.filter((p) => p.status !== "delivered")),
+    [filteredActive, showDelivered],
+  );
+
   const grouped = useMemo(() => {
     const map: Record<PipelineStage, ProjectRow[]> = {
       lead: [], proposal: [], active: [], review: [], delivered: [], lost: [],
     };
-    for (const p of filteredActive) {
+    for (const p of boardProjects) {
       if (p.status in map) map[p.status as PipelineStage].push(p);
     }
     return map;
-  }, [filteredActive]);
+  }, [boardProjects]);
 
   const validStages = new Set<string>(PIPELINE_STAGES.map((s) => s.id));
   const offPipeline = filteredActive.filter((p) => !validStages.has(p.status));
