@@ -19,6 +19,7 @@ import { Route as AuthenticatedPipelineRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedNewRouteImport } from './routes/_authenticated/new'
 import { Route as AuthenticatedLoginsRouteImport } from './routes/_authenticated/logins'
 import { Route as AuthenticatedImplementationRouteImport } from './routes/_authenticated/implementation'
+import { Route as AuthenticatedChangelogRouteImport } from './routes/_authenticated/changelog'
 import { Route as AuthenticatedIdRouteImport } from './routes/_authenticated/$id'
 import { Route as AuthenticatedWikiIndexRouteImport } from './routes/_authenticated/wiki.index'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients/index'
@@ -79,6 +80,11 @@ const AuthenticatedImplementationRoute =
     path: '/implementation',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedChangelogRoute = AuthenticatedChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedIdRoute = AuthenticatedIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -135,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/$id': typeof AuthenticatedIdRoute
+  '/changelog': typeof AuthenticatedChangelogRoute
   '/implementation': typeof AuthenticatedImplementationRouteWithChildren
   '/logins': typeof AuthenticatedLoginsRoute
   '/new': typeof AuthenticatedNewRoute
@@ -154,6 +161,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/$id': typeof AuthenticatedIdRoute
+  '/changelog': typeof AuthenticatedChangelogRoute
   '/implementation': typeof AuthenticatedImplementationRouteWithChildren
   '/logins': typeof AuthenticatedLoginsRoute
   '/new': typeof AuthenticatedNewRoute
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/_authenticated/$id': typeof AuthenticatedIdRoute
+  '/_authenticated/changelog': typeof AuthenticatedChangelogRoute
   '/_authenticated/implementation': typeof AuthenticatedImplementationRouteWithChildren
   '/_authenticated/logins': typeof AuthenticatedLoginsRoute
   '/_authenticated/new': typeof AuthenticatedNewRoute
@@ -198,6 +207,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/$id'
+    | '/changelog'
     | '/implementation'
     | '/logins'
     | '/new'
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/$id'
+    | '/changelog'
     | '/implementation'
     | '/logins'
     | '/new'
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/login'
     | '/_authenticated/$id'
+    | '/_authenticated/changelog'
     | '/_authenticated/implementation'
     | '/_authenticated/logins'
     | '/_authenticated/new'
@@ -330,6 +342,13 @@ declare module '@tanstack/react-router' {
       path: '/implementation'
       fullPath: '/implementation'
       preLoaderRoute: typeof AuthenticatedImplementationRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/changelog': {
+      id: '/_authenticated/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof AuthenticatedChangelogRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/$id': {
@@ -446,6 +465,7 @@ const AuthenticatedWikiRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedIdRoute: typeof AuthenticatedIdRoute
+  AuthenticatedChangelogRoute: typeof AuthenticatedChangelogRoute
   AuthenticatedImplementationRoute: typeof AuthenticatedImplementationRouteWithChildren
   AuthenticatedLoginsRoute: typeof AuthenticatedLoginsRoute
   AuthenticatedNewRoute: typeof AuthenticatedNewRoute
@@ -461,6 +481,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIdRoute: AuthenticatedIdRoute,
+  AuthenticatedChangelogRoute: AuthenticatedChangelogRoute,
   AuthenticatedImplementationRoute:
     AuthenticatedImplementationRouteWithChildren,
   AuthenticatedLoginsRoute: AuthenticatedLoginsRoute,
