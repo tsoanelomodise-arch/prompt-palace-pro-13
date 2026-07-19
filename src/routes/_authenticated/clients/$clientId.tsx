@@ -29,6 +29,7 @@ import { CredentialShareActions } from "@/components/CredentialShareActions";
 import { SaveStatus } from "@/components/ui/save-status";
 import { DeleteProjectButton } from "@/components/DeleteProjectButton";
 import { ProjectClientPopover } from "@/components/ProjectClientPopover";
+import { PROJECT_TYPES } from "@/lib/project-types";
 
 export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   component: ClientDetail,
