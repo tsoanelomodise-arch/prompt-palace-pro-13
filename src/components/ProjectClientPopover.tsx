@@ -142,7 +142,7 @@ export function ProjectClientPopover({
           <p className="text-[11px] text-muted-foreground">
             {isSeries
               ? `Moves all ${ids.length} project occurrences in this recurring series and their linked records to the selected client.`
-              : "Moves this project and its linked tasks, notes, and conversations to the selected client."}
+              : "Moves this project to the selected client. If it's part of a recurring series, every occurrence in the series moves together — a project belongs to exactly one client."}
           </p>
           <div className="flex items-center justify-end gap-2 pt-1">
             <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)} disabled={saving}>
