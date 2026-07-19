@@ -236,6 +236,20 @@ function ProjectTasksPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            onClick={async () => {
+              if (!project) return;
+              if (!confirm(`Remove "${project.name}" from implementation? Tasks will be preserved but the project will no longer appear on the implementation board.`)) return;
+              const { error } = await supabase.from("projects").update({ impl_stage: null }).eq("id", projectId);
+              if (error) { toast.error(error.message); return; }
+              qc.invalidateQueries({ queryKey: ["projects", "implementation"] });
+              toast.success("Removed from implementation");
+              router.navigate({ to: "/implementation" });
+            }}
+          >
+            Remove from implementation
+          </Button>
           <Button onClick={() => setNewOpen(true)}>
             <Plus className="h-4 w-4 mr-1.5" /> New task
           </Button>
