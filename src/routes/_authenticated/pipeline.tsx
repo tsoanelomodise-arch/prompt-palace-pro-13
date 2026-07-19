@@ -3,9 +3,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { PIPELINE_STAGES, REPEAT_INTERVALS, repeatLabel, DATE_FILTERS, matchesDateFilter, daysUntil, formatShortDate, type PipelineStage, type RepeatInterval, type DateFilter } from "@/lib/pipeline";
+import { PIPELINE_STAGES, REPEAT_INTERVALS, repeatLabel, DATE_FILTERS, matchesDateFilter, daysUntil, formatShortDate, formatZAR, formatZARCompact, STAGE_WIN_PROBABILITY, type PipelineStage, type RepeatInterval, type DateFilter } from "@/lib/pipeline";
 import { PipelineTabs } from "./recurring";
-import { GripVertical, Briefcase, Plus, Repeat, Archive, ArchiveRestore, ChevronDown, ChevronRight, CalendarClock, CalendarCheck2, CalendarDays, AlertTriangle, CalendarPlus, Eye, EyeOff } from "lucide-react";
+import { GripVertical, Briefcase, Plus, Repeat, Archive, ArchiveRestore, ChevronDown, ChevronRight, CalendarClock, CalendarCheck2, CalendarDays, AlertTriangle, CalendarPlus, Eye, EyeOff, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,9 +14,11 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
 import { ProjectDatesPopover } from "@/components/ProjectDatesPopover";
+import { ProjectValuePopover } from "@/components/ProjectValuePopover";
 import { DeleteProjectButton } from "@/components/DeleteProjectButton";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/_authenticated/pipeline")({
   component: PipelinePage,
@@ -35,7 +37,9 @@ type ProjectRow = {
   due_date: string | null;
   delivered_at: string | null;
   next_occurrence_date: string | null;
+  opportunity_value: number | null;
 };
+
 
 type ClientLite = { id: string; name: string };
 
@@ -55,7 +59,7 @@ function PipelinePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id,name,status,notes,client_id,updated_at,repeat_interval,archived_at,start_date,due_date,delivered_at,next_occurrence_date")
+        .select("id,name,status,notes,client_id,updated_at,repeat_interval,archived_at,start_date,due_date,delivered_at,next_occurrence_date,opportunity_value")
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return data as ProjectRow[];
@@ -207,7 +211,10 @@ function PipelinePage() {
         </div>
       </div>
 
+      <PipelineValueDashboard projects={activeProjects} />
+
       <div className="flex flex-wrap items-center gap-2 mb-6">
+
         <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mr-1">Due</span>
         {DATE_FILTERS.map((f) => {
           const isActive = dateFilter === f.id;
@@ -436,19 +443,39 @@ function PipelinePage() {
                               >
                                 {clientName.get(p.client_id) ?? "—"}
                               </Link>
-                              {(p.start_date || p.due_date || (p.status === "delivered" && p.delivered_at) || (p.repeat_interval !== "none" && p.next_occurrence_date)) && (
-                                <div className="mt-1.5 flex flex-wrap gap-1">
-                                  {p.start_date && <DatePill icon="start" date={p.start_date} />}
-                                  {p.due_date && <DatePill icon="due" date={p.due_date} />}
-                                  {p.status === "delivered" && p.delivered_at && (
-                                    <DatePill icon="delivered" date={p.delivered_at} />
-                                  )}
-                                  {p.repeat_interval !== "none" && p.next_occurrence_date && (
-                                    <DatePill icon="next" date={p.next_occurrence_date} />
-                                  )}
-                                </div>
-                              )}
+                              <div className="mt-1.5 flex flex-wrap gap-1">
+                                <ProjectValuePopover
+                                  projectId={p.id}
+                                  value={p.opportunity_value}
+                                  trigger={
+                                    <button
+                                      type="button"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className={`inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest border rounded-full px-1.5 py-0.5 cursor-pointer hover:border-foreground transition ${
+                                        p.opportunity_value != null && p.opportunity_value > 0
+                                          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                                          : "border-dashed border-border text-muted-foreground"
+                                      }`}
+                                      title={p.opportunity_value != null ? formatZAR(p.opportunity_value) : "Set opportunity value"}
+                                    >
+                                      <Coins className="h-2.5 w-2.5" />
+                                      {p.opportunity_value != null && p.opportunity_value > 0
+                                        ? formatZARCompact(p.opportunity_value)
+                                        : "Set value"}
+                                    </button>
+                                  }
+                                />
+                                {p.start_date && <DatePill icon="start" date={p.start_date} />}
+                                {p.due_date && <DatePill icon="due" date={p.due_date} />}
+                                {p.status === "delivered" && p.delivered_at && (
+                                  <DatePill icon="delivered" date={p.delivered_at} />
+                                )}
+                                {p.repeat_interval !== "none" && p.next_occurrence_date && (
+                                  <DatePill icon="next" date={p.next_occurrence_date} />
+                                )}
+                              </div>
                               {p.repeat_interval && p.repeat_interval !== "none" && (
+
                                 <div className="mt-1.5 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground border border-border rounded-full px-1.5 py-0.5">
                                   <Repeat className="h-2.5 w-2.5" /> {repeatLabel(p.repeat_interval)}
                                 </div>
@@ -633,6 +660,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
   const [startDate, setStartDate] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [nextOccurrenceDate, setNextOccurrenceDate] = useState("");
+  const [opportunityValue, setOpportunityValue] = useState("");
   const [addingClient, setAddingClient] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [creatingClient, setCreatingClient] = useState(false);
@@ -647,7 +675,9 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
     setStartDate("");
     setDueDate("");
     setNextOccurrenceDate("");
+    setOpportunityValue("");
   };
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -662,6 +692,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
     }
     setSaving(true);
     const stamp = status === "delivered" ? new Date().toISOString() : null;
+    const parsedValue = opportunityValue.trim() === "" ? null : Number(opportunityValue);
     const { error } = await supabase.from("projects").insert({
       client_id: clientId,
       name: name.trim(),
@@ -671,6 +702,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
       start_date: startDate || null,
       due_date: dueDate || null,
       next_occurrence_date: repeatInterval === "none" ? null : nextOccurrenceDate || null,
+      opportunity_value: Number.isFinite(parsedValue) && (parsedValue as number) >= 0 ? parsedValue : null,
       delivered_at: stamp,
       created_by: user.id,
     });
@@ -679,6 +711,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
       toast.error(error.message);
       return;
     }
+
     toast.success("Project added");
     qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
     qc.invalidateQueries({ queryKey: ["projects"] });
@@ -820,6 +853,27 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
               />
             </div>
           </div>
+          <div>
+            <Label htmlFor="np-value" className="text-xs">Opportunity value (ZAR)</Label>
+            <div className="mt-1.5 flex items-center gap-2">
+              <span className="font-mono text-xs text-muted-foreground">R</span>
+              <Input
+                id="np-value"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="100"
+                value={opportunityValue}
+                onChange={(e) => setOpportunityValue(e.target.value)}
+                placeholder="0"
+                className="h-10"
+              />
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Estimated deal size in South African Rand — used for pipeline totals.
+            </p>
+          </div>
+
           {repeatInterval !== "none" && (
             <div>
               <Label htmlFor="np-next" className="text-xs">Next occurrence date</Label>
@@ -898,5 +952,130 @@ function DatePill({ icon, date }: { icon: "start" | "due" | "delivered" | "next"
     </span>
   );
 }
+
+function PipelineValueDashboard({ projects }: { projects: ProjectRow[] }) {
+  const { totalOpen, weighted, wonYtd, byStage, activeCount, withValue } = useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const byStage: Record<PipelineStage, { total: number; count: number }> = {
+      lead: { total: 0, count: 0 },
+      proposal: { total: 0, count: 0 },
+      active: { total: 0, count: 0 },
+      review: { total: 0, count: 0 },
+      delivered: { total: 0, count: 0 },
+      lost: { total: 0, count: 0 },
+    };
+    let totalOpen = 0;
+    let weighted = 0;
+    let wonYtd = 0;
+    let withValue = 0;
+    for (const p of projects) {
+      const stage = (p.status in byStage ? p.status : null) as PipelineStage | null;
+      if (!stage) continue;
+      const v = p.opportunity_value ?? 0;
+      byStage[stage].count += 1;
+      byStage[stage].total += v;
+      if (v > 0) withValue += 1;
+      if (stage !== "delivered" && stage !== "lost") {
+        totalOpen += v;
+        weighted += v * STAGE_WIN_PROBABILITY[stage];
+      }
+      if (stage === "delivered" && p.delivered_at) {
+        const d = new Date(p.delivered_at);
+        if (d.getFullYear() === year) wonYtd += v;
+      }
+    }
+    const activeCount = projects.filter((p) => p.status !== "delivered" && p.status !== "lost").length;
+    return { totalOpen, weighted, wonYtd, byStage, activeCount, withValue };
+  }, [projects]);
+
+  const maxStageTotal = Math.max(
+    1,
+    ...PIPELINE_STAGES.filter((s) => s.id !== "lost").map((s) => byStage[s.id].total),
+  );
+
+  return (
+    <div className="mb-8 border border-border rounded-lg bg-card overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Coins className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Opportunity value · ZAR
+          </span>
+        </div>
+        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/70">
+          {withValue}/{activeCount} priced
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
+        <div className="px-4 py-4">
+          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Open pipeline</div>
+          <div className="mt-1 font-display text-2xl md:text-3xl font-semibold tabular-nums">
+            {formatZAR(totalOpen)}
+          </div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">
+            Lead → Review, unweighted
+          </div>
+        </div>
+        <div className="px-4 py-4">
+          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Weighted forecast</div>
+          <div className="mt-1 font-display text-2xl md:text-3xl font-semibold tabular-nums">
+            {formatZAR(weighted)}
+          </div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">
+            Value × stage win probability
+          </div>
+        </div>
+        <div className="px-4 py-4">
+          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Delivered · {new Date().getFullYear()}
+          </div>
+          <div className="mt-1 font-display text-2xl md:text-3xl font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
+            {formatZAR(wonYtd)}
+          </div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">Year to date</div>
+        </div>
+      </div>
+
+      <div className="px-4 pt-3 pb-4 border-t border-border">
+        <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+          By stage
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {PIPELINE_STAGES.map((s) => {
+            const { total, count } = byStage[s.id];
+            const pct = s.id === "lost" ? 0 : Math.round((total / maxStageTotal) * 100);
+            const barCls =
+              s.id === "delivered"
+                ? "bg-emerald-500/70"
+                : s.id === "lost"
+                  ? "bg-muted-foreground/30"
+                  : "bg-foreground/70";
+            return (
+              <div key={s.id} className="min-w-0">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground truncate">
+                    {s.label}
+                  </span>
+                  <span className="font-mono text-[10px] tabular-nums text-muted-foreground/70">
+                    {count}
+                  </span>
+                </div>
+                <div className="mt-1 font-display text-sm font-semibold tabular-nums truncate" title={formatZAR(total)}>
+                  {formatZARCompact(total)}
+                </div>
+                <div className="mt-1 h-1 rounded-full bg-paper-soft overflow-hidden">
+                  <div className={`h-full ${barCls} transition-all`} style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 
