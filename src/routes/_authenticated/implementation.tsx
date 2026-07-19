@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ProjectClientPopover } from "@/components/ProjectClientPopover";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/implementation")({
