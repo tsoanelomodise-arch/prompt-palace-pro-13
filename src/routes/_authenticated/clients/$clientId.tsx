@@ -24,6 +24,8 @@ import { REPEAT_INTERVALS, repeatLabel, PIPELINE_STAGES, isPipelineStage, type R
 import { formatDistanceToNow, format } from "date-fns";
 import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 import { useAutosave } from "@/hooks/use-autosave";
+import { CredentialShareActions } from "@/components/CredentialShareActions";
+
 import { SaveStatus } from "@/components/ui/save-status";
 import { DeleteProjectButton } from "@/components/DeleteProjectButton";
 import { ProjectClientPopover } from "@/components/ProjectClientPopover";
@@ -666,6 +668,15 @@ function CredentialsPane({ clientId }: { clientId: string }) {
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ label: "", system: "", url: "", username: "", password: "", notes: "" });
 
+  const { data: client } = useQuery({
+    queryKey: ["client", clientId, "name"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("clients").select("name").eq("id", clientId).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: creds = [] } = useQuery({
     queryKey: ["credentials", clientId],
     queryFn: async () => {
@@ -678,6 +689,7 @@ function CredentialsPane({ clientId }: { clientId: string }) {
       return data;
     },
   });
+
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -749,7 +761,7 @@ function CredentialsPane({ clientId }: { clientId: string }) {
       ) : (
         <div className="space-y-3">
           {creds.map((c) => (
-            <CredentialRow key={c.id} cred={c} clientId={clientId} isAdmin={isAdmin} />
+            <CredentialRow key={c.id} cred={c} clientId={clientId} clientName={client?.name ?? null} isAdmin={isAdmin} />
           ))}
         </div>
       )}
@@ -757,7 +769,7 @@ function CredentialsPane({ clientId }: { clientId: string }) {
   );
 }
 
-function CredentialRow({ cred, clientId, isAdmin }: { cred: { id: string; label: string; system: string | null; url: string | null; username: string | null; notes: string | null; last_rotated_at: string | null }; clientId: string; isAdmin: boolean }) {
+function CredentialRow({ cred, clientId, clientName, isAdmin }: { cred: { id: string; label: string; system: string | null; url: string | null; username: string | null; notes: string | null; last_rotated_at: string | null }; clientId: string; clientName: string | null; isAdmin: boolean }) {
   const qc = useQueryClient();
   const [revealed, setRevealed] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -914,9 +926,11 @@ function CredentialRow({ cred, clientId, isAdmin }: { cred: { id: string; label:
                 <Button size="icon" variant="ghost" onClick={reveal} disabled={loading} title={revealed ? "Hide" : "Reveal"}>
                   {revealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
-                <Button size="icon" variant="ghost" onClick={copy} disabled={loading} title="Copy">
+                <Button size="icon" variant="ghost" onClick={copy} disabled={loading} title="Copy password">
                   <Copy className="h-4 w-4" />
                 </Button>
+                <CredentialShareActions cred={cred} clientName={clientName} />
+
               </>
             )}
           </div>
