@@ -395,6 +395,16 @@ function ProjectsPane({ clientId }: { clientId: string }) {
     qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
   };
 
+  const updateType = async (projectId: string, value: string) => {
+    const { error } = await supabase
+      .from("projects")
+      .update({ project_type: value || null } as any)
+      .eq("id", projectId);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["projects", clientId] });
+    qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
+  };
+
   const renameProject = async (projectId: string, nextName: string) => {
     const trimmed = nextName.trim();
     if (!trimmed) {
