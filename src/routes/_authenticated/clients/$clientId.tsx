@@ -88,9 +88,7 @@ function ClientDetail() {
           {client.industry ?? "Client"}
         </p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
-          <h1 className="font-display text-4xl md:text-5xl font-semibold leading-tight">
-            {client.name}
-          </h1>
+          <ClientNameHeader client={client} />
           <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
             <select
               value={client.status}
