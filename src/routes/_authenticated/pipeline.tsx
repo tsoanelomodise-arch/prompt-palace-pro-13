@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PIPELINE_STAGES, REPEAT_INTERVALS, repeatLabel, DATE_FILTERS, matchesDateFilter, daysUntil, formatShortDate, formatZAR, formatZARCompact, STAGE_WIN_PROBABILITY, type PipelineStage, type RepeatInterval, type DateFilter } from "@/lib/pipeline";
 import { PipelineTabs } from "./recurring";
-import { GripVertical, Briefcase, Plus, Repeat, Archive, ArchiveRestore, ChevronDown, ChevronRight, CalendarClock, CalendarCheck2, CalendarDays, AlertTriangle, CalendarPlus, Eye, EyeOff, Coins } from "lucide-react";
+import { GripVertical, Briefcase, Plus, Repeat, Archive, ArchiveRestore, ChevronDown, ChevronRight, CalendarClock, CalendarCheck2, CalendarDays, AlertTriangle, CalendarPlus, Eye, EyeOff, Coins, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { ProjectDatesPopover } from "@/components/ProjectDatesPopover";
 import { ProjectValuePopover } from "@/components/ProjectValuePopover";
+import { ProjectClientPopover } from "@/components/ProjectClientPopover";
 import { DeleteProjectButton } from "@/components/DeleteProjectButton";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -496,6 +497,21 @@ function PipelinePage() {
                                     aria-label="Edit project dates"
                                   >
                                     <CalendarPlus className="h-3.5 w-3.5" />
+                                  </button>
+                                }
+                              />
+                              <ProjectClientPopover
+                                projectId={p.id}
+                                currentClientId={p.client_id}
+                                trigger={
+                                  <button
+                                    type="button"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-foreground"
+                                    title="Reassign client"
+                                    aria-label="Reassign client"
+                                  >
+                                    <Users className="h-3.5 w-3.5" />
                                   </button>
                                 }
                               />

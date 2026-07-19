@@ -26,6 +26,7 @@ import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 import { useAutosave } from "@/hooks/use-autosave";
 import { SaveStatus } from "@/components/ui/save-status";
 import { DeleteProjectButton } from "@/components/DeleteProjectButton";
+import { ProjectClientPopover } from "@/components/ProjectClientPopover";
 
 export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   component: ClientDetail,
@@ -472,6 +473,20 @@ function ProjectsPane({ clientId }: { clientId: string }) {
                         <option key={s.id} value={s.id}>{s.label}</option>
                       ))}
                     </select>
+                    <ProjectClientPopover
+                      projectId={p.id}
+                      currentClientId={p.client_id}
+                      trigger={
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:text-foreground transition"
+                          title="Reassign to another client"
+                          aria-label="Reassign to another client"
+                        >
+                          <Users className="h-3.5 w-3.5" />
+                        </button>
+                      }
+                    />
                     <DeleteProjectButton projectIds={p.id} projectName={p.name} clientId={clientId} />
                   </div>
                 </div>

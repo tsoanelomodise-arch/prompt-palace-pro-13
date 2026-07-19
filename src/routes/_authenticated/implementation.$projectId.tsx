@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ProjectClientPopover } from "@/components/ProjectClientPopover";
 import {
   ArrowLeft,
   Plus,
@@ -38,6 +39,7 @@ import {
   CalendarClock,
   AlertTriangle,
   User,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -196,7 +198,7 @@ function ProjectTasksPage() {
 
       <div className="flex flex-wrap items-end justify-between gap-6 mb-8 pb-8 border-b border-border">
         <div className="min-w-0">
-          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
             {client ? (
               <Link
                 to="/clients/$clientId"
@@ -208,8 +210,25 @@ function ProjectTasksPage() {
               </Link>
             ) : (
               "—"
-            )}{" "}
-            · {tasks.length} tasks
+            )}
+            {project && client && (
+              <ProjectClientPopover
+                projectId={project.id}
+                currentClientId={project.client_id}
+                trigger={
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-foreground transition"
+                    title="Reassign client"
+                    aria-label="Reassign client"
+                  >
+                    <Users className="h-3 w-3" />
+                  </button>
+                }
+              />
+            )}
+            <span className="text-muted-foreground/60">·</span>
+            {tasks.length} tasks
           </p>
           <h1 className="mt-3 font-display text-4xl md:text-5xl font-semibold leading-[0.95] tracking-tight truncate">
             {project?.name ?? "…"}
