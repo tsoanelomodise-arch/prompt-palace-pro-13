@@ -451,6 +451,19 @@ function ProjectsPane({ clientId }: { clientId: string }) {
               ))}
             </select>
           </div>
+          <div>
+            <Label className="text-xs">Project type</Label>
+            <select
+              value={projectType}
+              onChange={(e) => setProjectType(e.target.value)}
+              className="h-10 mt-1 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">— None —</option>
+              {PROJECT_TYPES.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
           <Button type="submit" size="sm">Save</Button>
           <Button type="button" size="sm" variant="ghost" onClick={() => setAdding(false)}>Cancel</Button>
         </form>
