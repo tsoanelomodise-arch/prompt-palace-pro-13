@@ -53,16 +53,42 @@ export function ProjectClientPopover({
       return;
     }
     setSaving(true);
+
+    // Expand to full recurring series so every occurrence moves together.
+    // A "series" = same current client + same name + repeat_interval != 'none'.
+    let targetIds = [...ids];
+    if (!isSeries) {
+      const { data: proj } = await supabase
+        .from("projects")
+        .select("name, repeat_interval, client_id")
+        .eq("id", projectId)
+        .single();
+      if (proj && proj.repeat_interval && proj.repeat_interval !== "none") {
+        const { data: siblings } = await supabase
+          .from("projects")
+          .select("id")
+          .eq("client_id", proj.client_id)
+          .eq("name", proj.name)
+          .neq("repeat_interval", "none");
+        if (siblings && siblings.length > 0) {
+          targetIds = siblings.map((s) => s.id);
+        }
+      }
+    }
+
     const { error } = await supabase
       .from("projects")
       .update({ client_id: selected })
-      .in("id", ids);
+      .in("id", targetIds);
     setSaving(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success(isSeries ? "Series reassigned to a different client" : "Project reassigned to a different client");
+    const movedSeries = targetIds.length > 1;
+    toast.success(movedSeries
+      ? `Series reassigned (${targetIds.length} occurrences moved)`
+      : "Project reassigned to a different client");
     qc.invalidateQueries({ queryKey: ["projects"] });
     qc.invalidateQueries({ queryKey: ["clients"] });
     qc.invalidateQueries({ queryKey: ["client", currentClientId] });
@@ -116,7 +142,7 @@ export function ProjectClientPopover({
           <p className="text-[11px] text-muted-foreground">
             {isSeries
               ? `Moves all ${ids.length} project occurrences in this recurring series and their linked records to the selected client.`
-              : "Moves this project and its linked tasks, notes, and conversations to the selected client."}
+              : "Moves this project to the selected client. If it's part of a recurring series, every occurrence in the series moves together — a project belongs to exactly one client."}
           </p>
           <div className="flex items-center justify-end gap-2 pt-1">
             <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)} disabled={saving}>
