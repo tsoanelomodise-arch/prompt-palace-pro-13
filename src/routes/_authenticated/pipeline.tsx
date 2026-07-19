@@ -211,7 +211,10 @@ function PipelinePage() {
         </div>
       </div>
 
+      <PipelineValueDashboard projects={activeProjects} />
+
       <div className="flex flex-wrap items-center gap-2 mb-6">
+
         <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mr-1">Due</span>
         {DATE_FILTERS.map((f) => {
           const isActive = dateFilter === f.id;
