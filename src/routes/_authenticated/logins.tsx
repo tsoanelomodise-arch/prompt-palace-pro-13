@@ -419,11 +419,16 @@ function CredentialRow({ cred, clients }: { cred: CredRow; clients: ClientLite[]
                 <Button size="icon" variant="ghost" onClick={reveal} disabled={loading} title={revealed ? "Hide" : "Reveal"}>
                   {revealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
-                <Button size="icon" variant="ghost" onClick={copy} disabled={loading} title="Copy">
+                <Button size="icon" variant="ghost" onClick={copy} disabled={loading} title="Copy password">
                   <Copy className="h-4 w-4" />
                 </Button>
+                <CredentialShareActions
+                  cred={{ id: cred.id, label: cred.label, system: cred.system, url: cred.url, username: cred.username, notes: cred.notes }}
+                  clientName={cred.client?.name}
+                />
               </>
             )}
+
           </div>
         </div>
       </div>
