@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PIPELINE_STAGES, REPEAT_INTERVALS, repeatLabel, DATE_FILTERS, matchesDateFilter, daysUntil, formatShortDate, type PipelineStage, type RepeatInterval, type DateFilter } from "@/lib/pipeline";
 import { PipelineTabs } from "./recurring";
-import { GripVertical, Briefcase, Plus, Repeat, Archive, ArchiveRestore, ChevronDown, ChevronRight, CalendarClock, CalendarCheck2, CalendarDays, AlertTriangle, CalendarPlus } from "lucide-react";
+import { GripVertical, Briefcase, Plus, Repeat, Archive, ArchiveRestore, ChevronDown, ChevronRight, CalendarClock, CalendarCheck2, CalendarDays, AlertTriangle, CalendarPlus, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,6 +47,7 @@ function PipelinePage() {
   const [overStage, setOverStage] = useState<PipelineStage | null>(null);
   const [dragging, setDragging] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [showDelivered, setShowDelivered] = useState(true);
   const [dateFilter, setDateFilter] = useState<DateFilter>("all");
 
   const { data: projects = [], isLoading } = useQuery({
@@ -84,15 +85,20 @@ function PipelinePage() {
     [activeProjects, dateFilter],
   );
 
+  const boardProjects = useMemo(
+    () => (showDelivered ? filteredActive : filteredActive.filter((p) => p.status !== "delivered")),
+    [filteredActive, showDelivered],
+  );
+
   const grouped = useMemo(() => {
     const map: Record<PipelineStage, ProjectRow[]> = {
       lead: [], proposal: [], active: [], review: [], delivered: [], lost: [],
     };
-    for (const p of filteredActive) {
+    for (const p of boardProjects) {
       if (p.status in map) map[p.status as PipelineStage].push(p);
     }
     return map;
-  }, [filteredActive]);
+  }, [boardProjects]);
 
   const validStages = new Set<string>(PIPELINE_STAGES.map((s) => s.id));
   const offPipeline = filteredActive.filter((p) => !validStages.has(p.status));
@@ -226,6 +232,23 @@ function PipelinePage() {
             </button>
           );
         })}
+        <span className="w-px h-4 bg-border mx-1" aria-hidden="true" />
+        <button
+          type="button"
+          onClick={() => setShowDelivered((v) => !v)}
+          className={`font-mono text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-full border transition inline-flex items-center gap-1.5 ${
+            showDelivered
+              ? "bg-foreground text-background border-foreground"
+              : "border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+          }`}
+          title={showDelivered ? "Hide delivered projects from the board" : "Show delivered projects on the board"}
+        >
+          {showDelivered ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+          Delivered
+          <span className={`tabular-nums ${showDelivered ? "opacity-80" : "opacity-60"}`}>
+            {grouped.delivered.length}
+          </span>
+        </button>
       </div>
 
       {isLoading ? (
@@ -335,8 +358,8 @@ function PipelinePage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            {PIPELINE_STAGES.map((stage) => {
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ${showDelivered ? "xl:grid-cols-6" : "xl:grid-cols-5"}`}>
+            {(showDelivered ? PIPELINE_STAGES : PIPELINE_STAGES.filter((s) => s.id !== "delivered")).map((stage) => {
               const items = grouped[stage.id];
               const isOver = overStage === stage.id;
               return (
