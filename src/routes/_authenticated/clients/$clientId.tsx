@@ -88,9 +88,7 @@ function ClientDetail() {
           {client.industry ?? "Client"}
         </p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
-          <h1 className="font-display text-4xl md:text-5xl font-semibold leading-tight">
-            {client.name}
-          </h1>
+          <ClientNameHeader client={client} />
           <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
             <select
               value={client.status}
@@ -186,6 +184,77 @@ function ClientDetail() {
         {tab === "conversations" && <ConversationsPane clientId={clientId} />}
         {tab === "notes" && <NotesPane clientId={clientId} />}
       </div>
+    </div>
+  );
+}
+
+function ClientNameHeader({ client }: { client: { id: string; name: string } }) {
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(client.name);
+
+  const save = async () => {
+    const trimmed = draft.trim();
+    if (!trimmed) {
+      toast.error("Client name cannot be empty");
+      return;
+    }
+    if (trimmed === client.name) {
+      setEditing(false);
+      return;
+    }
+    const { error } = await supabase.from("clients").update({ name: trimmed }).eq("id", client.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Client name updated");
+    qc.invalidateQueries({ queryKey: ["client", client.id] });
+    qc.invalidateQueries({ queryKey: ["clients"] });
+    qc.invalidateQueries({ queryKey: ["clients", "lite"] });
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div className="flex flex-wrap items-end gap-2">
+        <Input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") save();
+            if (e.key === "Escape") {
+              setDraft(client.name);
+              setEditing(false);
+            }
+          }}
+          className="font-display text-4xl md:text-5xl font-semibold leading-tight h-auto px-0 py-0 border-0 border-b border-border rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-foreground w-full max-w-2xl"
+          autoFocus
+        />
+        <div className="flex items-center gap-2 pb-2">
+          <Button size="sm" onClick={save} className="h-8 gap-1">
+            <Save className="h-3.5 w-3.5" /> Save
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => { setDraft(client.name); setEditing(false); }} className="h-8 gap-1">
+            <X className="h-3.5 w-3.5" /> Cancel
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-3 group">
+      <h1 className="font-display text-4xl md:text-5xl font-semibold leading-tight">
+        {client.name}
+      </h1>
+      <button
+        onClick={() => setEditing(true)}
+        className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-foreground p-1"
+        title="Edit client name"
+      >
+        <Pencil className="h-5 w-5" />
+      </button>
     </div>
   );
 }
