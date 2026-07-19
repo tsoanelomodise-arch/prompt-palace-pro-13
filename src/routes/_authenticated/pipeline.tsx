@@ -40,6 +40,7 @@ type ProjectRow = {
   delivered_at: string | null;
   next_occurrence_date: string | null;
   opportunity_value: number | null;
+  project_type: string | null;
 };
 
 
