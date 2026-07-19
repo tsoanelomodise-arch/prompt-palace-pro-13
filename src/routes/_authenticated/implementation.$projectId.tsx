@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ProjectClientPopover } from "@/components/ProjectClientPopover";
 import {
   ArrowLeft,
   Plus,
@@ -38,6 +39,7 @@ import {
   CalendarClock,
   AlertTriangle,
   User,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 
