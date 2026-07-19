@@ -51,10 +51,7 @@ function AuthLayout() {
             <NavLink to="/logins" icon={<KeyRound className="h-3.5 w-3.5" />}>Logins</NavLink>
             <NavLink to="/" icon={<Library className="h-3.5 w-3.5" />}>Prompts</NavLink>
             <NavLink to="/wiki" icon={<BookOpen className="h-3.5 w-3.5" />}>Wiki</NavLink>
-            <NavLink to="/changelog" icon={<ScrollText className="h-3.5 w-3.5" />}>Changelog</NavLink>
-            {isAdmin && (
-              <NavLink to="/team" icon={<Shield className="h-3.5 w-3.5" />}>Team</NavLink>
-            )}
+            {isAdmin && <AdminGroup />}
           </nav>
 
           <div className="flex items-center gap-2 ml-auto">
