@@ -346,6 +346,7 @@ export type Database = {
           next_occurrence_date: string | null
           notes: string | null
           opportunity_value: number | null
+          project_type: string | null
           repeat_interval: string
           start_date: string | null
           starts_on: string | null
@@ -366,6 +367,7 @@ export type Database = {
           next_occurrence_date?: string | null
           notes?: string | null
           opportunity_value?: number | null
+          project_type?: string | null
           repeat_interval?: string
           start_date?: string | null
           starts_on?: string | null
@@ -386,6 +388,7 @@ export type Database = {
           next_occurrence_date?: string | null
           notes?: string | null
           opportunity_value?: number | null
+          project_type?: string | null
           repeat_interval?: string
           start_date?: string | null
           starts_on?: string | null
