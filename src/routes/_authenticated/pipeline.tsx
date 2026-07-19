@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PIPELINE_STAGES, REPEAT_INTERVALS, repeatLabel, DATE_FILTERS, matchesDateFilter, daysUntil, formatShortDate, type PipelineStage, type RepeatInterval, type DateFilter } from "@/lib/pipeline";
 import { PipelineTabs } from "./recurring";
-import { GripVertical, Briefcase, Plus, Repeat, Archive, ArchiveRestore, ChevronDown, ChevronRight, CalendarClock, CalendarCheck2, CalendarDays, AlertTriangle, CalendarPlus } from "lucide-react";
+import { GripVertical, Briefcase, Plus, Repeat, Archive, ArchiveRestore, ChevronDown, ChevronRight, CalendarClock, CalendarCheck2, CalendarDays, AlertTriangle, CalendarPlus, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
