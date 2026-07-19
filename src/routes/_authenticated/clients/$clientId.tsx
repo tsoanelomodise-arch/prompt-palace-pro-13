@@ -769,7 +769,7 @@ function CredentialsPane({ clientId }: { clientId: string }) {
   );
 }
 
-function CredentialRow({ cred, clientId, isAdmin }: { cred: { id: string; label: string; system: string | null; url: string | null; username: string | null; notes: string | null; last_rotated_at: string | null }; clientId: string; isAdmin: boolean }) {
+function CredentialRow({ cred, clientId, clientName, isAdmin }: { cred: { id: string; label: string; system: string | null; url: string | null; username: string | null; notes: string | null; last_rotated_at: string | null }; clientId: string; clientName: string | null; isAdmin: boolean }) {
   const qc = useQueryClient();
   const [revealed, setRevealed] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
