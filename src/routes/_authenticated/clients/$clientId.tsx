@@ -340,6 +340,7 @@ function ProjectsPane({ clientId }: { clientId: string }) {
   const [name, setName] = useState("");
   const [status, setStatus] = useState<PipelineStage>("lead");
   const [repeatInterval, setRepeatInterval] = useState<RepeatInterval>("none");
+  const [projectType, setProjectType] = useState<string>("");
 
   const { data: projects = [] } = useQuery({
     queryKey: ["projects", clientId],
