@@ -358,8 +358,8 @@ function PipelinePage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            {PIPELINE_STAGES.map((stage) => {
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ${showDelivered ? "xl:grid-cols-6" : "xl:grid-cols-5"}`}>
+            {(showDelivered ? PIPELINE_STAGES : PIPELINE_STAGES.filter((s) => s.id !== "delivered")).map((stage) => {
               const items = grouped[stage.id];
               const isOver = overStage === stage.id;
               return (
