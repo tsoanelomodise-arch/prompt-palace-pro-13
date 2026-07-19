@@ -477,8 +477,7 @@ function PipelinePage() {
                                   <DatePill icon="next" date={p.next_occurrence_date} />
                                 )}
                               </div>
-                              {p.repeat_interval && p.repeat_interval !== "none" && (
-
+                              {(p.project_type || (p.repeat_interval && p.repeat_interval !== "none")) && (
                                 <div className="mt-1.5 flex items-center gap-1 flex-wrap">
                                   {p.project_type && (
                                     <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-foreground bg-paper-soft border border-border rounded-full px-1.5 py-0.5">
