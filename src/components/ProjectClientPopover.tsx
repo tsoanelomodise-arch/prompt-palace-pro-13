@@ -18,18 +18,22 @@ type ClientLite = { id: string; name: string };
 
 export function ProjectClientPopover({
   projectId,
+  projectIds,
   currentClientId,
   trigger,
   align = "end",
   onReassigned,
 }: {
   projectId: string;
+  projectIds?: string[];
   currentClientId: string;
   trigger: ReactNode;
   align?: "start" | "center" | "end";
   onReassigned?: (newClientId: string) => void;
 }) {
   const qc = useQueryClient();
+  const ids = projectIds && projectIds.length > 0 ? projectIds : [projectId];
+  const isSeries = ids.length > 1;
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(currentClientId);
   const [saving, setSaving] = useState(false);
@@ -52,13 +56,13 @@ export function ProjectClientPopover({
     const { error } = await supabase
       .from("projects")
       .update({ client_id: selected })
-      .eq("id", projectId);
+      .in("id", ids);
     setSaving(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success("Project reassigned to a different client");
+    toast.success(isSeries ? "Series reassigned to a different client" : "Project reassigned to a different client");
     qc.invalidateQueries({ queryKey: ["projects"] });
     qc.invalidateQueries({ queryKey: ["clients"] });
     qc.invalidateQueries({ queryKey: ["client", currentClientId] });
@@ -86,7 +90,9 @@ export function ProjectClientPopover({
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Briefcase className="h-3.5 w-3.5" />
-            <span className="font-mono text-[10px] uppercase tracking-widest">Reassign client</span>
+            <span className="font-mono text-[10px] uppercase tracking-widest">
+              Reassign {isSeries ? "series" : "project"}
+            </span>
           </div>
           <div>
             <Label htmlFor={`pc-client-${projectId}`} className="text-xs">Client</Label>
@@ -108,7 +114,9 @@ export function ProjectClientPopover({
             </Select>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Moves this project and its linked tasks, notes, and conversations to the selected client.
+            {isSeries
+              ? `Moves all ${ids.length} project occurrences in this recurring series and their linked records to the selected client.`
+              : "Moves this project and its linked tasks, notes, and conversations to the selected client."}
           </p>
           <div className="flex items-center justify-end gap-2 pt-1">
             <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)} disabled={saving}>
