@@ -47,6 +47,7 @@ function PipelinePage() {
   const [overStage, setOverStage] = useState<PipelineStage | null>(null);
   const [dragging, setDragging] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [showDelivered, setShowDelivered] = useState(true);
   const [dateFilter, setDateFilter] = useState<DateFilter>("all");
 
   const { data: projects = [], isLoading } = useQuery({
