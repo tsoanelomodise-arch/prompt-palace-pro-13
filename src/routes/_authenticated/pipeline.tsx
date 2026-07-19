@@ -836,6 +836,20 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
             </select>
           </div>
           <div>
+            <Label htmlFor="np-type" className="text-xs">Project type</Label>
+            <select
+              id="np-type"
+              value={projectType}
+              onChange={(e) => setProjectType(e.target.value)}
+              className="mt-1.5 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">— None —</option>
+              {PROJECT_TYPES.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+          <div>
             <Label htmlFor="np-repeat" className="text-xs">Repeats</Label>
             <select
               id="np-repeat"
