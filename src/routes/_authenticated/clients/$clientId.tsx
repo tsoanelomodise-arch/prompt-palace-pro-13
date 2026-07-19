@@ -363,10 +363,11 @@ function ProjectsPane({ clientId }: { clientId: string }) {
       name: name.trim(),
       status,
       repeat_interval: repeatInterval,
+      project_type: projectType || null,
       created_by: user.id,
-    });
+    } as any);
     if (error) return toast.error(error.message);
-    setName(""); setStatus("lead"); setRepeatInterval("none"); setAdding(false);
+    setName(""); setStatus("lead"); setRepeatInterval("none"); setProjectType(""); setAdding(false);
     qc.invalidateQueries({ queryKey: ["projects", clientId] });
     qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
     toast.success("Project added");
