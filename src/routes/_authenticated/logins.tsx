@@ -17,6 +17,8 @@ import {
   KeyRound, Search, Plus, ExternalLink, Eye, EyeOff, Copy, Trash2, Pencil, X, Save, Building2,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { CredentialShareActions } from "@/components/CredentialShareActions";
+
 
 type ClientLite = {
   id: string;
