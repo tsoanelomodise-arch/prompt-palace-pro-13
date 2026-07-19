@@ -80,3 +80,45 @@ export const formatShortDate = (s: string | null | undefined): string => {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 };
 
+// ---- Currency (ZAR) ---------------------------------------------------------
+
+const ZAR_FORMATTER = new Intl.NumberFormat("en-ZA", {
+  style: "currency",
+  currency: "ZAR",
+  maximumFractionDigits: 0,
+});
+
+const ZAR_FORMATTER_CENTS = new Intl.NumberFormat("en-ZA", {
+  style: "currency",
+  currency: "ZAR",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/** Format a number as South African Rand (R 12 345). Null/undefined → em dash. */
+export const formatZAR = (n: number | null | undefined, opts?: { cents?: boolean }): string => {
+  if (n === null || n === undefined || Number.isNaN(n)) return "—";
+  return (opts?.cents ? ZAR_FORMATTER_CENTS : ZAR_FORMATTER).format(n);
+};
+
+/** Compact ZAR for tight UI: R 1.2k, R 3.4m. */
+export const formatZARCompact = (n: number | null | undefined): string => {
+  if (n === null || n === undefined || Number.isNaN(n) || n === 0) return "R 0";
+  const abs = Math.abs(n);
+  const sign = n < 0 ? "-" : "";
+  if (abs >= 1_000_000) return `${sign}R ${(abs / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1)}m`;
+  if (abs >= 1_000) return `${sign}R ${(abs / 1_000).toFixed(abs >= 10_000 ? 0 : 1)}k`;
+  return `${sign}R ${abs.toFixed(0)}`;
+};
+
+/** Rough win-probability by pipeline stage — used for weighted forecast totals. */
+export const STAGE_WIN_PROBABILITY: Record<PipelineStage, number> = {
+  lead: 0.1,
+  proposal: 0.35,
+  active: 0.7,
+  review: 0.9,
+  delivered: 1,
+  lost: 0,
+};
+
+
