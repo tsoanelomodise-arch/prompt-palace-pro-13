@@ -761,7 +761,7 @@ function CredentialsPane({ clientId }: { clientId: string }) {
       ) : (
         <div className="space-y-3">
           {creds.map((c) => (
-            <CredentialRow key={c.id} cred={c} clientId={clientId} isAdmin={isAdmin} />
+            <CredentialRow key={c.id} cred={c} clientId={clientId} clientName={client?.name ?? null} isAdmin={isAdmin} />
           ))}
         </div>
       )}
