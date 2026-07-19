@@ -17,9 +17,11 @@ export const SIZE_MAX_WIDTH: Record<ImageSize, string> = {
   full: "100%",
 };
 
-const DEFAULT_SIZE: ImageSize = "medium";
+const DEFAULT_SIZE: ImageSize = "full";
 
-/** Parse `alt|size` markdown alt text into a plain alt + size hint. */
+/** Parse `alt|size` markdown alt text into a plain alt + size hint.
+ *  Legacy images without a size hint fall back to "full" so they render at
+ *  container width (matching pre-sizing behavior). */
 export function parseImageAlt(raw: string): { alt: string; size: ImageSize } {
   const m = raw.match(/^(.*)\|(small|medium|large|full)\s*$/i);
   if (!m) return { alt: raw, size: DEFAULT_SIZE };
