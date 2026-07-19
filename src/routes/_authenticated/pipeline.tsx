@@ -692,6 +692,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
     }
     setSaving(true);
     const stamp = status === "delivered" ? new Date().toISOString() : null;
+    const parsedValue = opportunityValue.trim() === "" ? null : Number(opportunityValue);
     const { error } = await supabase.from("projects").insert({
       client_id: clientId,
       name: name.trim(),
@@ -701,6 +702,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
       start_date: startDate || null,
       due_date: dueDate || null,
       next_occurrence_date: repeatInterval === "none" ? null : nextOccurrenceDate || null,
+      opportunity_value: Number.isFinite(parsedValue) && (parsedValue as number) >= 0 ? parsedValue : null,
       delivered_at: stamp,
       created_by: user.id,
     });
@@ -709,6 +711,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
       toast.error(error.message);
       return;
     }
+
     toast.success("Project added");
     qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
     qc.invalidateQueries({ queryKey: ["projects"] });
