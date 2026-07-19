@@ -926,9 +926,11 @@ function CredentialRow({ cred, clientId, clientName, isAdmin }: { cred: { id: st
                 <Button size="icon" variant="ghost" onClick={reveal} disabled={loading} title={revealed ? "Hide" : "Reveal"}>
                   {revealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
-                <Button size="icon" variant="ghost" onClick={copy} disabled={loading} title="Copy">
+                <Button size="icon" variant="ghost" onClick={copy} disabled={loading} title="Copy password">
                   <Copy className="h-4 w-4" />
                 </Button>
+                <CredentialShareActions cred={cred} clientName={clientName} />
+
               </>
             )}
           </div>
