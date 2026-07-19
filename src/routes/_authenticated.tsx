@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { BookMarked, LogOut, Users, Library, Shield, BookOpen, KanbanSquare, Repeat, KeyRound, ChevronDown, Sparkles, ScrollText, Settings } from "lucide-react";
+import { BookMarked, LogOut, Users, Library, Shield, BookOpen, KanbanSquare, Repeat, KeyRound, ChevronDown, ScrollText, Settings } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
