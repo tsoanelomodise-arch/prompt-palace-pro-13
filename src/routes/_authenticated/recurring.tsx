@@ -458,6 +458,21 @@ function RecurringDashboard() {
                                     </span>
                                   )}
                                 </button>
+                                <ProjectClientPopover
+                                  projectId={s.current?.id ?? s.allIds[0]}
+                                  projectIds={s.allIds}
+                                  currentClientId={s.clientId}
+                                  trigger={
+                                    <button
+                                      type="button"
+                                      className="inline-flex items-center justify-center p-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition"
+                                      title="Reassign series to another client"
+                                      aria-label="Reassign series to another client"
+                                    >
+                                      <Users className="h-3 w-3" />
+                                    </button>
+                                  }
+                                />
                                 <DeleteProjectButton
                                   projectIds={s.allIds}
                                   projectName={s.name}
