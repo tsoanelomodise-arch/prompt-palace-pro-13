@@ -37,7 +37,9 @@ type ProjectRow = {
   due_date: string | null;
   delivered_at: string | null;
   next_occurrence_date: string | null;
+  opportunity_value: number | null;
 };
+
 
 type ClientLite = { id: string; name: string };
 
