@@ -84,8 +84,15 @@ function AuthLayout() {
         <Outlet />
       </main>
       <footer className="border-t border-border/60 py-6 mt-12">
-        <div className="mx-auto max-w-6xl px-6 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-          Agency CRM · Internal Tool
+        <div className="mx-auto max-w-6xl px-6 flex items-center justify-between gap-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <span>Agency CRM · Internal Tool</span>
+          <Link
+            to="/changelog"
+            className="inline-flex items-center gap-1.5 hover:text-foreground transition"
+          >
+            <Sparkles className="h-3 w-3" />
+            Change log
+          </Link>
         </div>
       </footer>
     </div>
