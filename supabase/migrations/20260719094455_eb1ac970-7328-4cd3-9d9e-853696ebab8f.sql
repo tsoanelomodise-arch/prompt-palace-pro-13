@@ -1,0 +1,1 @@
+ALTER TABLE public.projects ADD COLUMN opportunity_value numeric(14,2);
