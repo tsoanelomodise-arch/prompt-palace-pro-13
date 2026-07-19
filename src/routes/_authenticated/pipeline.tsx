@@ -722,9 +722,10 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
       due_date: dueDate || null,
       next_occurrence_date: repeatInterval === "none" ? null : nextOccurrenceDate || null,
       opportunity_value: Number.isFinite(parsedValue) && (parsedValue as number) >= 0 ? parsedValue : null,
+      project_type: projectType || null,
       delivered_at: stamp,
       created_by: user.id,
-    });
+    } as any);
     setSaving(false);
     if (error) {
       toast.error(error.message);
