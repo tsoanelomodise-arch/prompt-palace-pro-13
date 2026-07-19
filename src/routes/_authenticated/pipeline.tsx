@@ -853,6 +853,27 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
               />
             </div>
           </div>
+          <div>
+            <Label htmlFor="np-value" className="text-xs">Opportunity value (ZAR)</Label>
+            <div className="mt-1.5 flex items-center gap-2">
+              <span className="font-mono text-xs text-muted-foreground">R</span>
+              <Input
+                id="np-value"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="100"
+                value={opportunityValue}
+                onChange={(e) => setOpportunityValue(e.target.value)}
+                placeholder="0"
+                className="h-10"
+              />
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Estimated deal size in South African Rand — used for pipeline totals.
+            </p>
+          </div>
+
           {repeatInterval !== "none" && (
             <div>
               <Label htmlFor="np-next" className="text-xs">Next occurrence date</Label>
