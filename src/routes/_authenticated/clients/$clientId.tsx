@@ -538,6 +538,20 @@ function ProjectsPane({ clientId }: { clientId: string }) {
                   ))}
                 </select>
               </div>
+              <div className="flex items-center gap-2">
+                <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Type</Label>
+                <select
+                  value={(p as any).project_type ?? ""}
+                  onChange={(e) => updateType(p.id, e.target.value)}
+                  className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                >
+                  <option value="">— None —</option>
+                  {PROJECT_TYPES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
               <LinkedWikiPages entityType="project" entityId={p.id} />
             </div>
           ))}
