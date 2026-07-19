@@ -24,6 +24,8 @@ import { REPEAT_INTERVALS, repeatLabel, PIPELINE_STAGES, isPipelineStage, type R
 import { formatDistanceToNow, format } from "date-fns";
 import { LinkedWikiPages } from "@/components/wiki/LinkedWikiPages";
 import { useAutosave } from "@/hooks/use-autosave";
+import { CredentialShareActions } from "@/components/CredentialShareActions";
+
 import { SaveStatus } from "@/components/ui/save-status";
 import { DeleteProjectButton } from "@/components/DeleteProjectButton";
 import { ProjectClientPopover } from "@/components/ProjectClientPopover";
