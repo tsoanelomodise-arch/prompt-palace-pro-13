@@ -232,6 +232,23 @@ function PipelinePage() {
             </button>
           );
         })}
+        <span className="w-px h-4 bg-border mx-1" aria-hidden="true" />
+        <button
+          type="button"
+          onClick={() => setShowDelivered((v) => !v)}
+          className={`font-mono text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-full border transition inline-flex items-center gap-1.5 ${
+            showDelivered
+              ? "bg-foreground text-background border-foreground"
+              : "border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+          }`}
+          title={showDelivered ? "Hide delivered projects from the board" : "Show delivered projects on the board"}
+        >
+          {showDelivered ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+          Delivered
+          <span className={`tabular-nums ${showDelivered ? "opacity-80" : "opacity-60"}`}>
+            {grouped.delivered.length}
+          </span>
+        </button>
       </div>
 
       {isLoading ? (
