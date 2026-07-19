@@ -479,8 +479,17 @@ function PipelinePage() {
                               </div>
                               {p.repeat_interval && p.repeat_interval !== "none" && (
 
-                                <div className="mt-1.5 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground border border-border rounded-full px-1.5 py-0.5">
-                                  <Repeat className="h-2.5 w-2.5" /> {repeatLabel(p.repeat_interval)}
+                                <div className="mt-1.5 flex items-center gap-1 flex-wrap">
+                                  {p.project_type && (
+                                    <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-foreground bg-paper-soft border border-border rounded-full px-1.5 py-0.5">
+                                      <Briefcase className="h-2.5 w-2.5" /> {p.project_type}
+                                    </span>
+                                  )}
+                                  {p.repeat_interval && p.repeat_interval !== "none" && (
+                                    <div className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground border border-border rounded-full px-1.5 py-0.5">
+                                      <Repeat className="h-2.5 w-2.5" /> {repeatLabel(p.repeat_interval)}
+                                    </div>
+                                  )}
                                 </div>
                               )}
                               {p.notes && (
