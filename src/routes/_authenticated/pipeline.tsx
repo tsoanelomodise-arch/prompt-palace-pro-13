@@ -694,6 +694,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
     setDueDate("");
     setNextOccurrenceDate("");
     setOpportunityValue("");
+    setProjectType("");
   };
 
 
