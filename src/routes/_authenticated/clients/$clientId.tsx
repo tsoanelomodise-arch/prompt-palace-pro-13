@@ -668,6 +668,15 @@ function CredentialsPane({ clientId }: { clientId: string }) {
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ label: "", system: "", url: "", username: "", password: "", notes: "" });
 
+  const { data: client } = useQuery({
+    queryKey: ["client", clientId, "name"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("clients").select("name").eq("id", clientId).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: creds = [] } = useQuery({
     queryKey: ["credentials", clientId],
     queryFn: async () => {
@@ -680,6 +689,7 @@ function CredentialsPane({ clientId }: { clientId: string }) {
       return data;
     },
   });
+
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
