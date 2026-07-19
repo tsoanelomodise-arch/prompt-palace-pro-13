@@ -862,7 +862,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
                 type="number"
                 inputMode="decimal"
                 min="0"
-                step="100"
+                step="any"
                 value={opportunityValue}
                 onChange={(e) => setOpportunityValue(e.target.value)}
                 placeholder="0"

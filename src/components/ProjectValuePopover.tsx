@@ -62,7 +62,7 @@ export function ProjectValuePopover({
             type="number"
             inputMode="decimal"
             min="0"
-            step="100"
+            step="any"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); save(); } }}
