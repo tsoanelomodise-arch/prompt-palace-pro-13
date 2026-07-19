@@ -660,6 +660,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
   const [startDate, setStartDate] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [nextOccurrenceDate, setNextOccurrenceDate] = useState("");
+  const [opportunityValue, setOpportunityValue] = useState("");
   const [addingClient, setAddingClient] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [creatingClient, setCreatingClient] = useState(false);
@@ -674,7 +675,9 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
     setStartDate("");
     setDueDate("");
     setNextOccurrenceDate("");
+    setOpportunityValue("");
   };
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
