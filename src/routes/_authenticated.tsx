@@ -156,3 +156,47 @@ function PipelineGroup() {
     </DropdownMenu>
   );
 }
+
+function AdminGroup() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const items = [
+    { to: "/team", icon: <Shield className="h-3.5 w-3.5" />, label: "Team" },
+    { to: "/changelog", icon: <ScrollText className="h-3.5 w-3.5" />, label: "Change log" },
+  ];
+  const isActive = items.some((i) => (i.to === "/" ? pathname === "/" : pathname.startsWith(i.to)));
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className={cn(
+            "flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-widest px-3 py-1.5 rounded-md transition",
+            isActive
+              ? "text-foreground bg-paper-soft"
+              : "text-muted-foreground hover:text-foreground hover:bg-paper-soft",
+            "data-[state=open]:text-foreground data-[state=open]:bg-paper-soft"
+          )}
+        >
+          <Settings className="h-3.5 w-3.5" />
+          Admin
+          <ChevronDown className="h-3 w-3 ml-0.5 opacity-60" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-[10rem]">
+        {items.map((item) => (
+          <DropdownMenuItem key={item.to} asChild>
+            <Link
+              to={item.to}
+              className="flex items-center gap-1.5 cursor-pointer font-mono text-[11px] uppercase tracking-widest"
+              activeProps={{ className: "text-foreground bg-paper-soft" }}
+              activeOptions={{ exact: item.to === "/" }}
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
