@@ -29,6 +29,7 @@ import { CredentialShareActions } from "@/components/CredentialShareActions";
 import { SaveStatus } from "@/components/ui/save-status";
 import { DeleteProjectButton } from "@/components/DeleteProjectButton";
 import { ProjectClientPopover } from "@/components/ProjectClientPopover";
+import { PROJECT_TYPES } from "@/lib/project-types";
 
 export const Route = createFileRoute("/_authenticated/clients/$clientId")({
   component: ClientDetail,
@@ -339,6 +340,7 @@ function ProjectsPane({ clientId }: { clientId: string }) {
   const [name, setName] = useState("");
   const [status, setStatus] = useState<PipelineStage>("lead");
   const [repeatInterval, setRepeatInterval] = useState<RepeatInterval>("none");
+  const [projectType, setProjectType] = useState<string>("");
 
   const { data: projects = [] } = useQuery({
     queryKey: ["projects", clientId],
@@ -361,10 +363,11 @@ function ProjectsPane({ clientId }: { clientId: string }) {
       name: name.trim(),
       status,
       repeat_interval: repeatInterval,
+      project_type: projectType || null,
       created_by: user.id,
-    });
+    } as any);
     if (error) return toast.error(error.message);
-    setName(""); setStatus("lead"); setRepeatInterval("none"); setAdding(false);
+    setName(""); setStatus("lead"); setRepeatInterval("none"); setProjectType(""); setAdding(false);
     qc.invalidateQueries({ queryKey: ["projects", clientId] });
     qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
     toast.success("Project added");
@@ -386,6 +389,16 @@ function ProjectsPane({ clientId }: { clientId: string }) {
     const { error } = await supabase
       .from("projects")
       .update({ repeat_interval: value })
+      .eq("id", projectId);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["projects", clientId] });
+    qc.invalidateQueries({ queryKey: ["projects", "pipeline"] });
+  };
+
+  const updateType = async (projectId: string, value: string) => {
+    const { error } = await supabase
+      .from("projects")
+      .update({ project_type: value || null } as any)
       .eq("id", projectId);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["projects", clientId] });
@@ -445,6 +458,19 @@ function ProjectsPane({ clientId }: { clientId: string }) {
             >
               {REPEAT_INTERVALS.map((r) => (
                 <option key={r.id} value={r.id}>{r.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <Label className="text-xs">Project type</Label>
+            <select
+              value={projectType}
+              onChange={(e) => setProjectType(e.target.value)}
+              className="h-10 mt-1 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">— None —</option>
+              {PROJECT_TYPES.map((t) => (
+                <option key={t} value={t}>{t}</option>
               ))}
             </select>
           </div>
@@ -509,6 +535,20 @@ function ProjectsPane({ clientId }: { clientId: string }) {
                 >
                   {REPEAT_INTERVALS.map((r) => (
                     <option key={r.id} value={r.id}>{r.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Type</Label>
+                <select
+                  value={(p as any).project_type ?? ""}
+                  onChange={(e) => updateType(p.id, e.target.value)}
+                  className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                >
+                  <option value="">— None —</option>
+                  {PROJECT_TYPES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
               </div>

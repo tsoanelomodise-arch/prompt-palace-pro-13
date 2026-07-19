@@ -19,6 +19,7 @@ import { ProjectClientPopover } from "@/components/ProjectClientPopover";
 import { DeleteProjectButton } from "@/components/DeleteProjectButton";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { PROJECT_TYPES } from "@/lib/project-types";
 
 
 export const Route = createFileRoute("/_authenticated/pipeline")({
@@ -39,6 +40,7 @@ type ProjectRow = {
   delivered_at: string | null;
   next_occurrence_date: string | null;
   opportunity_value: number | null;
+  project_type: string | null;
 };
 
 
@@ -60,7 +62,7 @@ function PipelinePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id,name,status,notes,client_id,updated_at,repeat_interval,archived_at,start_date,due_date,delivered_at,next_occurrence_date,opportunity_value")
+        .select("id,name,status,notes,client_id,updated_at,repeat_interval,archived_at,start_date,due_date,delivered_at,next_occurrence_date,opportunity_value,project_type")
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return data as ProjectRow[];
@@ -475,10 +477,18 @@ function PipelinePage() {
                                   <DatePill icon="next" date={p.next_occurrence_date} />
                                 )}
                               </div>
-                              {p.repeat_interval && p.repeat_interval !== "none" && (
-
-                                <div className="mt-1.5 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground border border-border rounded-full px-1.5 py-0.5">
-                                  <Repeat className="h-2.5 w-2.5" /> {repeatLabel(p.repeat_interval)}
+                              {(p.project_type || (p.repeat_interval && p.repeat_interval !== "none")) && (
+                                <div className="mt-1.5 flex items-center gap-1 flex-wrap">
+                                  {p.project_type && (
+                                    <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-foreground bg-paper-soft border border-border rounded-full px-1.5 py-0.5">
+                                      <Briefcase className="h-2.5 w-2.5" /> {p.project_type}
+                                    </span>
+                                  )}
+                                  {p.repeat_interval && p.repeat_interval !== "none" && (
+                                    <div className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground border border-border rounded-full px-1.5 py-0.5">
+                                      <Repeat className="h-2.5 w-2.5" /> {repeatLabel(p.repeat_interval)}
+                                    </div>
+                                  )}
                                 </div>
                               )}
                               {p.notes && (
@@ -677,6 +687,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
   const [dueDate, setDueDate] = useState("");
   const [nextOccurrenceDate, setNextOccurrenceDate] = useState("");
   const [opportunityValue, setOpportunityValue] = useState("");
+  const [projectType, setProjectType] = useState<string>("");
   const [addingClient, setAddingClient] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [creatingClient, setCreatingClient] = useState(false);
@@ -692,6 +703,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
     setDueDate("");
     setNextOccurrenceDate("");
     setOpportunityValue("");
+    setProjectType("");
   };
 
 
@@ -719,9 +731,10 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
       due_date: dueDate || null,
       next_occurrence_date: repeatInterval === "none" ? null : nextOccurrenceDate || null,
       opportunity_value: Number.isFinite(parsedValue) && (parsedValue as number) >= 0 ? parsedValue : null,
+      project_type: projectType || null,
       delivered_at: stamp,
       created_by: user.id,
-    });
+    } as any);
     setSaving(false);
     if (error) {
       toast.error(error.message);
@@ -828,6 +841,20 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
             >
               {PIPELINE_STAGES.map((s) => (
                 <option key={s.id} value={s.id}>{s.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <Label htmlFor="np-type" className="text-xs">Project type</Label>
+            <select
+              id="np-type"
+              value={projectType}
+              onChange={(e) => setProjectType(e.target.value)}
+              className="mt-1.5 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">— None —</option>
+              {PROJECT_TYPES.map((t) => (
+                <option key={t} value={t}>{t}</option>
               ))}
             </select>
           </div>
