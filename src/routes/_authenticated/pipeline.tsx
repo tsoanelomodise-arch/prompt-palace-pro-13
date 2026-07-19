@@ -500,6 +500,21 @@ function PipelinePage() {
                                   </button>
                                 }
                               />
+                              <ProjectClientPopover
+                                projectId={p.id}
+                                currentClientId={p.client_id}
+                                trigger={
+                                  <button
+                                    type="button"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-foreground"
+                                    title="Reassign client"
+                                    aria-label="Reassign client"
+                                  >
+                                    <Users className="h-3.5 w-3.5" />
+                                  </button>
+                                }
+                              />
                               <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); setArchived(p.id, true); }}
