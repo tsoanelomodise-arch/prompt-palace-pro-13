@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { BookMarked, LogOut, Users, Library, Shield, BookOpen, KanbanSquare, Repeat, KeyRound, ChevronDown, Sparkles, ScrollText } from "lucide-react";
+import { BookMarked, LogOut, Users, Library, Shield, BookOpen, KanbanSquare, Repeat, KeyRound, ChevronDown, ScrollText, Settings } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
@@ -51,10 +51,7 @@ function AuthLayout() {
             <NavLink to="/logins" icon={<KeyRound className="h-3.5 w-3.5" />}>Logins</NavLink>
             <NavLink to="/" icon={<Library className="h-3.5 w-3.5" />}>Prompts</NavLink>
             <NavLink to="/wiki" icon={<BookOpen className="h-3.5 w-3.5" />}>Wiki</NavLink>
-            <NavLink to="/changelog" icon={<ScrollText className="h-3.5 w-3.5" />}>Changelog</NavLink>
-            {isAdmin && (
-              <NavLink to="/team" icon={<Shield className="h-3.5 w-3.5" />}>Team</NavLink>
-            )}
+            {isAdmin && <AdminGroup />}
           </nav>
 
           <div className="flex items-center gap-2 ml-auto">
@@ -78,8 +75,7 @@ function AuthLayout() {
           <NavLink to="/logins" icon={<KeyRound className="h-3.5 w-3.5" />}>Logins</NavLink>
           <NavLink to="/" icon={<Library className="h-3.5 w-3.5" />}>Prompts</NavLink>
           <NavLink to="/wiki" icon={<BookOpen className="h-3.5 w-3.5" />}>Wiki</NavLink>
-          <NavLink to="/changelog" icon={<ScrollText className="h-3.5 w-3.5" />}>Changelog</NavLink>
-          {isAdmin && <NavLink to="/team" icon={<Shield className="h-3.5 w-3.5" />}>Team</NavLink>}
+          {isAdmin && <AdminGroup />}
         </nav>
       </header>
       <main className="flex-1">
@@ -88,13 +84,6 @@ function AuthLayout() {
       <footer className="border-t border-border/60 py-6 mt-12">
         <div className="mx-auto max-w-6xl px-6 flex items-center justify-between gap-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
           <span>Agency CRM · Internal Tool</span>
-          <Link
-            to="/changelog"
-            className="inline-flex items-center gap-1.5 hover:text-foreground transition"
-          >
-            <Sparkles className="h-3 w-3" />
-            Change log
-          </Link>
         </div>
       </footer>
     </div>
@@ -146,6 +135,50 @@ function PipelineGroup() {
         >
           <KanbanSquare className="h-3.5 w-3.5" />
           Pipeline
+          <ChevronDown className="h-3 w-3 ml-0.5 opacity-60" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-[10rem]">
+        {items.map((item) => (
+          <DropdownMenuItem key={item.to} asChild>
+            <Link
+              to={item.to}
+              className="flex items-center gap-1.5 cursor-pointer font-mono text-[11px] uppercase tracking-widest"
+              activeProps={{ className: "text-foreground bg-paper-soft" }}
+              activeOptions={{ exact: item.to === "/" }}
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function AdminGroup() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const items = [
+    { to: "/team", icon: <Shield className="h-3.5 w-3.5" />, label: "Team" },
+    { to: "/changelog", icon: <ScrollText className="h-3.5 w-3.5" />, label: "Change log" },
+  ];
+  const isActive = items.some((i) => (i.to === "/" ? pathname === "/" : pathname.startsWith(i.to)));
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className={cn(
+            "flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-widest px-3 py-1.5 rounded-md transition",
+            isActive
+              ? "text-foreground bg-paper-soft"
+              : "text-muted-foreground hover:text-foreground hover:bg-paper-soft",
+            "data-[state=open]:text-foreground data-[state=open]:bg-paper-soft"
+          )}
+        >
+          <Settings className="h-3.5 w-3.5" />
+          Admin
           <ChevronDown className="h-3 w-3 ml-0.5 opacity-60" />
         </button>
       </DropdownMenuTrigger>
