@@ -62,7 +62,7 @@ function PipelinePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id,name,status,notes,client_id,updated_at,repeat_interval,archived_at,start_date,due_date,delivered_at,next_occurrence_date,opportunity_value")
+        .select("id,name,status,notes,client_id,updated_at,repeat_interval,archived_at,start_date,due_date,delivered_at,next_occurrence_date,opportunity_value,project_type")
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return data as ProjectRow[];
