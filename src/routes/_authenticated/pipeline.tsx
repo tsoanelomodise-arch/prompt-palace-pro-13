@@ -678,6 +678,7 @@ function NewProjectButton({ clients }: { clients: { id: string; name: string }[]
   const [dueDate, setDueDate] = useState("");
   const [nextOccurrenceDate, setNextOccurrenceDate] = useState("");
   const [opportunityValue, setOpportunityValue] = useState("");
+  const [projectType, setProjectType] = useState<string>("");
   const [addingClient, setAddingClient] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [creatingClient, setCreatingClient] = useState(false);
