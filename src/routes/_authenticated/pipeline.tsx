@@ -114,6 +114,11 @@ function PipelinePage() {
     [activeProjects],
   );
 
+  const deliveredCount = useMemo(
+    () => filteredActive.filter((p) => p.status === "delivered").length,
+    [filteredActive],
+  );
+
   const wipItems = useMemo(
     () =>
       filteredActive
