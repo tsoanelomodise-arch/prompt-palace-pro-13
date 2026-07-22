@@ -261,7 +261,7 @@ function PipelinePage() {
           {showDelivered ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
           Delivered
           <span className={`tabular-nums ${showDelivered ? "opacity-80" : "opacity-60"}`}>
-            {grouped.delivered.length}
+            {deliveredCount}
           </span>
         </button>
       </div>
