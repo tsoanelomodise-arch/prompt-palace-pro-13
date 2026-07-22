@@ -114,6 +114,11 @@ function PipelinePage() {
     [activeProjects],
   );
 
+  const deliveredCount = useMemo(
+    () => filteredActive.filter((p) => p.status === "delivered").length,
+    [filteredActive],
+  );
+
   const wipItems = useMemo(
     () =>
       filteredActive
@@ -256,7 +261,7 @@ function PipelinePage() {
           {showDelivered ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
           Delivered
           <span className={`tabular-nums ${showDelivered ? "opacity-80" : "opacity-60"}`}>
-            {grouped.delivered.length}
+            {deliveredCount}
           </span>
         </button>
       </div>
